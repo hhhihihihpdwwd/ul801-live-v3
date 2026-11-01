@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ul801-live
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TRAFIKLAB_STATIC_KEY
+        sync: false
+      - key: TRAFIKLAB_REALTIME_KEY
+        sync: false
