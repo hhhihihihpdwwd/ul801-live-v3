@@ -101,20 +101,20 @@ async function loadSchedule() {
       // used by route 801, with strict per-shape and global memory caps.
       const shapeUsage = new Map();
       for (const trip of tripMap.values()) if (trip.shape_id) shapeUsage.set(trip.shape_id, (shapeUsage.get(trip.shape_id)||0)+1);
-      const wantedShapes = new Set([...shapeUsage].sort((a,b)=>b[1]-a[1]).slice(0,80).map(x=>x[0]));
+      const wantedShapes = new Set([...shapeUsage].sort((a,b)=>b[1]-a[1]).slice(0,40).map(x=>x[0]));
       const shapes = new Map();
       let totalShapePoints = 0;
       await readGtfsFiles(filename, { 'shapes.txt': r => {
         if (!wantedShapes.has(r.shape_id)) return;
         let arr = shapes.get(r.shape_id);
         if (!arr) { arr = []; shapes.set(r.shape_id, arr); }
-        if (arr.length >= 1500 || totalShapePoints >= 75000) return;
+        if (arr.length >= 4500 || totalShapePoints >= 95000) return;
         const lat = Number(r.shape_pt_lat), lon = Number(r.shape_pt_lon);
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
         arr.push([Number(lat.toFixed(5)), Number(lon.toFixed(5))]);
         totalShapePoints++;
       }});
-      console.log(`UL 801 planned shape lines loaded: ${shapes.size}, points: ${totalShapePoints}`);
+      console.log(`UL 801 planned shape lines loaded: ${shapes.size}, points: ${totalShapePoints} (shape cap 4500, global cap 95000)`);
       const result = { tripMap, stopTimes, stops, shapes };
       schedule = result; lastStatic = Date.now();
       console.log(`UL GTFS loaded: ${routeIds.size} routes, ${tripMap.size} trips, ${usedStops.size} stops`);
