@@ -1,19 +1,13 @@
-# UL 801 – Update V4
+# UL 801 V5 – selektierte gefahrene Route
 
-Dieses Paket aktualisiert das bestehende GitHub-Repository `ul801-live-v3`. **Nur `server.js` und `public/index.html` ersetzen.** `package.json`, API-Keys und Render-Service bleiben unverändert.
+Bestehendes GitHub/Render Projekt weiterverwenden.
 
-## Neu
-- Geplante Ankunftszeiten an den nächsten Haltestellen (keine Echtzeitprognose).
-- Geolokalisierte Haltestellen mit Popups.
-- Blaue Linie aus tatsächlich beobachteten GPS-Punkten seit dem Start des Render-Servers, maximal 3 Stunden / 300 Punkte pro Fahrt. Es gibt ohne Speicherung vor Serverstart keine historische Fahrtspur.
-- Wählbares Abfrageintervall: 45 Sek (Standard), 20 Sek schnell, 90 Sek sparsam. Der Server cached Echtzeitdaten für 20 Sek.
-- GPS-Zeitstempel, Warnung bei Verbindungsfehlern.
+Ersetze `server.js` und `public/index.html`. API-Schlüssel und `package.json` bleiben unverändert.
 
-## Trafiklab-Kontingent
-Bronze Realtime: 30.000 Requests pro Monat. Dauerbetrieb alle 20 Sekunden würde das überschreiten. Im Browser nur bei sichtbarem Tab aktive Abfragen; Browser-Tabs kombinieren sich trotzdem zu stärkerem Traffic.
+**Route:** Aus offiziellen GTFS `shapes.txt` wird der planmäßige Straßenverlauf geladen. Nur nachdem man einen Bus ausdrücklich auswählt, erscheint die blaue Linie von Routenbeginn bis zu dessen nächstem Routenpunkt. Dies ist eine **rekonstruierte Strecke**, keine historische GPS-Messung. Keine Linie im Auto-Modus. Bei fehlenden Shape-Daten keine erfundene Strecke.
 
-## Deployment
-1. Auf GitHub `server.js` im Repo-Hauptverzeichnis ersetzen.
-2. `public/index.html` im Unterordner `public` ersetzen.
-3. Commit. Render startet automatisch, wenn Auto-Deploy eingeschaltet ist.
-4. `/api/health` und `/api/vehicles` prüfen.
+**Aktualisierung:** Webseite kann alle 5/10/20/45 Sekunden nachsehen; Server cached Trafiklab GPS weiterhin 20 Sekunden, um API-Limits zu schonen. Alle 5 Sekunden ist deshalb **keine neue echte GPS-Position garantiert**.
+
+**Haltestellen:** Fahrplanzeiten, keine Live-Verspätungsprognosen.
+
+**Achtung:** Das zusätzliche Einlesen von `shapes.txt` ist speicherbegrenzt (max. 75.000 Punkte, 80 Shapes) und kann den ersten GTFS-Abruf etwas verlängern. Auf der begrenzten Render-Instanz ohne echte Trafiklab API nicht Ende-zu-Ende getestet.

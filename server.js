@@ -96,7 +96,25 @@ async function loadSchedule() {
       }});
       for (const arr of stopTimes.values()) arr.sort((a, b) => a.seq - b.seq);
       await readGtfsFiles(filename, { 'stops.txt': s => { if (usedStops.has(s.stop_id)) stops.set(s.stop_id, { name: s.stop_name, lat: Number(s.stop_lat), lon: Number(s.stop_lon) }); } });
-      const result = { tripMap, stopTimes, stops, shapes: new Map() };
+      // GTFS shape coordinates are the planned road-following route. Read only shapes
+      // used by route 801, with strict per-shape and global memory caps.
+      const shapeUsage = new Map();
+      for (const trip of tripMap.values()) if (trip.shape_id) shapeUsage.set(trip.shape_id, (shapeUsage.get(trip.shape_id)||0)+1);
+      const wantedShapes = new Set([...shapeUsage].sort((a,b)=>b[1]-a[1]).slice(0,80).map(x=>x[0]));
+      const shapes = new Map();
+      let totalShapePoints = 0;
+      await readGtfsFiles(filename, { 'shapes.txt': r => {
+        if (!wantedShapes.has(r.shape_id)) return;
+        let arr = shapes.get(r.shape_id);
+        if (!arr) { arr = []; shapes.set(r.shape_id, arr); }
+        if (arr.length >= 1500 || totalShapePoints >= 75000) return;
+        const lat = Number(r.shape_pt_lat), lon = Number(r.shape_pt_lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+        arr.push([Number(lat.toFixed(5)), Number(lon.toFixed(5))]);
+        totalShapePoints++;
+      }});
+      console.log(`UL 801 planned shape lines loaded: ${shapes.size}, points: ${totalShapePoints}`);
+      const result = { tripMap, stopTimes, stops, shapes };
       schedule = result; lastStatic = Date.now();
       console.log(`UL GTFS loaded: ${routeIds.size} routes, ${tripMap.size} trips, ${usedStops.size} stops`);
       return result;
@@ -143,7 +161,7 @@ async function loadLive() {
       const timestamp = v.timestamp ? new Date(Number(v.timestamp.toString()) * 1000).toISOString() : null;
       const id = v.vehicle?.id || e.id;
       const trail = recordTrail(id, tripId, lat, lon, timestamp);
-      buses.push({ id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, passedStops, trail, shape: [] });
+      buses.push({ id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, passedStops, trail, shape: data.shapes.get(trip.shape_id) || [], routeIsPlanned: true });
     }
     latest = { updated: new Date().toISOString(), buses };
     lastLive = Date.now();
