@@ -1,16 +1,137 @@
 import express from 'express';
-import AdmZip from 'adm-zip';
-import {parse} from 'csv-parse/sync';
+import { createWriteStream } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
+import yauzl from 'yauzl';
+import { parse } from 'csv-parse';
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
-const app=express();const port=process.env.PORT||3000;const staticKey=process.env.TRAFIKLAB_STATIC_KEY;const realtimeKey=process.env.TRAFIKLAB_REALTIME_KEY;
-app.use(express.static('public'));
-const base='https://opendata.samtrafiken.se';
-let schedule=null, lastStatic=0, staticPromise=null, latest=null, lastLive=0, livePromise=null;
-function rows(zip,name){try{return parse(zip.readAsText(name),{columns:true,skip_empty_lines:true,bom:true,relax_quotes:true})}catch(e){throw Error('GTFS '+name+': '+e.message)}}
-async function getBinary(url){const c=new AbortController();const t=setTimeout(()=>c.abort(),25000);try{const r=await fetch(url,{signal:c.signal,headers:{'User-Agent':'UL801Live/1.0'}});if(!r.ok)throw Error('Trafiklab HTTP '+r.status);return Buffer.from(await r.arrayBuffer())}finally{clearTimeout(t)}}
-async function loadSchedule(){if(schedule && Date.now()-lastStatic<23*3600000)return schedule;if(staticPromise)return staticPromise;staticPromise=(async()=>{const zip=new AdmZip(await getBinary(`${base}/gtfs/ul/ul.zip?key=${encodeURIComponent(staticKey)}`));const routes=rows(zip,'routes.txt');const routeIds=new Set(routes.filter(r=>r.route_short_name?.trim()==='801').map(r=>r.route_id));if(!routeIds.size)throw Error('Linie 801 nicht im aktuellen UL-Fahrplan gefunden');const trips=rows(zip,'trips.txt').filter(t=>routeIds.has(t.route_id));const tripMap=new Map(trips.map(t=>[t.trip_id,t]));const wanted=new Set(tripMap.keys());const stops=new Map(rows(zip,'stops.txt').map(s=>[s.stop_id,{name:s.stop_name,lat:Number(s.stop_lat),lon:Number(s.stop_lon)}]));const stopTimes=new Map();for(const st of rows(zip,'stop_times.txt')){if(!wanted.has(st.trip_id))continue;if(!stopTimes.has(st.trip_id))stopTimes.set(st.trip_id,[]);stopTimes.get(st.trip_id).push({seq:Number(st.stop_sequence),stopId:st.stop_id,arrival:st.arrival_time,departure:st.departure_time})}for(const x of stopTimes.values())x.sort((a,b)=>a.seq-b.seq);let shapes=new Map();if(zip.getEntry('shapes.txt')){const shapeIds=new Set(trips.map(t=>t.shape_id).filter(Boolean));for(const s of rows(zip,'shapes.txt')){if(!shapeIds.has(s.shape_id))continue;if(!shapes.has(s.shape_id))shapes.set(s.shape_id,[]);shapes.get(s.shape_id).push({seq:Number(s.shape_pt_sequence),lat:Number(s.shape_pt_lat),lon:Number(s.shape_pt_lon)})}for(const [k,v] of shapes){v.sort((a,b)=>a.seq-b.seq);shapes.set(k,v.filter((_,i)=>i%Math.max(1,Math.ceil(v.length/400))===0).map(p=>[p.lat,p.lon]))}}schedule={tripMap,stopTimes,stops,shapes};lastStatic=Date.now();return schedule})();try{return await staticPromise}finally{staticPromise=null}}
-function nearestStop(route,lat,lon){if(!route.length)return 0;let best=Infinity,index=0;route.forEach((r,i)=>{const p=schedule.stops.get(r.stopId);if(!p)return;const d=(p.lat-lat)**2+((p.lon-lon)*.62)**2;if(d<best){best=d;index=i}});return index}
-async function loadLive(){if(latest && Date.now()-lastLive<15000)return latest;if(livePromise)return livePromise;livePromise=(async()=>{const data=await loadSchedule();const raw=await getBinary(`${base}/gtfs-rt/ul/VehiclePositions.pb?key=${encodeURIComponent(realtimeKey)}`);const feed=GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(raw);const buses=[];for(const e of feed.entity){const v=e.vehicle;if(!v?.position?.latitude||!v?.trip?.tripId)continue;const trip=data.tripMap.get(v.trip.tripId);if(!trip)continue;const times=data.stopTimes.get(v.trip.tripId)||[];const lat=v.position.latitude,lon=v.position.longitude;let ix=times.findIndex(s=>s.seq>=Number(v.currentStopSequence));if(ix<0||!v.currentStopSequence)ix=nearestStop(times,lat,lon);const dest=trip.trip_headsign||data.stops.get(times.at(-1)?.stopId)?.name||'Okänt';const tripStops=times.slice(Math.max(0,ix),Math.max(0,ix)+8).map(s=>({name:data.stops.get(s.stopId)?.name||s.stopId,scheduled:s.arrival}));const date=v.timestamp?new Date(Number(v.timestamp.toString())*1000).toISOString():null;buses.push({id:v.vehicle?.id||e.id,tripId:v.trip.tripId,lat,lon,bearing:v.position.bearing??null,direction:trip.direction_id,destination:dest,timestamp:date,nextStops:tripStops,shape:data.shapes.get(trip.shape_id)||[]})}latest={updated:new Date().toISOString(),buses};lastLive=Date.now();return latest})();try{return await livePromise}finally{livePromise=null}}
-app.get('/api/vehicles',async(req,res)=>{res.set('Cache-Control','no-store');if(!staticKey||!realtimeKey)return res.status(503).json({error:'API-Schlüssel fehlen: TRAFIKLAB_STATIC_KEY und TRAFIKLAB_REALTIME_KEY in Render setzen.',buses:[]});try{res.json(await loadLive())}catch(e){console.error(e);res.status(503).json({error:e.message,buses:[],lastSuccess:latest?.updated||null})}});
-app.get('/api/health',(req,res)=>res.json({configured:!!staticKey&&!!realtimeKey,staticKeyConfigured:!!staticKey,realtimeKeyConfigured:!!realtimeKey,staticLoaded:!!schedule,lastLive:lastLive?new Date(lastLive).toISOString():null}));
-app.listen(port,'0.0.0.0',()=>console.log(`UL 801 listening on ${port}`));
+
+const app = express();
+const port = process.env.PORT || 3000;
+const staticKey = process.env.TRAFIKLAB_STATIC_KEY;
+const realtimeKey = process.env.TRAFIKLAB_REALTIME_KEY;
+const base = 'https://opendata.samtrafiken.se';
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+let schedule = null, lastStatic = 0, staticPromise = null;
+let latest = null, lastLive = 0, livePromise = null;
+const yesterday = 23 * 60 * 60 * 1000;
+
+async function downloadFile(url, filename) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+  try {
+    const response = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': 'UL801Live/2.0' } });
+    if (!response.ok) throw new Error(`Trafiklab static HTTP ${response.status}`);
+    if (!response.body) throw new Error('Trafiklab lieferte keine Datei');
+    await pipeline(Readable.fromWeb(response.body), createWriteStream(filename));
+  } finally { clearTimeout(timer); }
+}
+function openZip(file) {
+  return new Promise((resolve, reject) => yauzl.open(file, { lazyEntries: true, autoClose: true }, (err, zip) => err ? reject(err) : resolve(zip)));
+}
+async function readGtfsFiles(zipPath, handlers) {
+  const zip = await openZip(zipPath);
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const fail = err => { if (!finished) { finished = true; zip.close(); reject(err); } };
+    zip.on('error', fail);
+    zip.on('end', () => { if (!finished) { finished = true; resolve(); } });
+    zip.on('entry', entry => {
+      const name = path.posix.basename(entry.fileName).toLowerCase();
+      const handler = handlers[name];
+      if (!handler) { zip.readEntry(); return; }
+      zip.openReadStream(entry, async (err, stream) => {
+        if (err) return fail(err);
+        try {
+          const parser = stream.pipe(parse({ columns: true, bom: true, skip_empty_lines: true, relax_quotes: true }));
+          for await (const row of parser) handler(row);
+          zip.readEntry();
+        } catch (e) { fail(e); }
+      });
+    });
+    zip.readEntry();
+  });
+}
+async function loadSchedule() {
+  if (schedule && Date.now() - lastStatic < yesterday) return schedule;
+  if (staticPromise) return staticPromise;
+  staticPromise = (async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'ul801-'));
+    const filename = path.join(directory, 'ul.zip');
+    try {
+      await downloadFile(`${base}/gtfs/ul/ul.zip?key=${encodeURIComponent(staticKey)}`, filename);
+      const routeIds = new Set(), tripMap = new Map(), stopTimes = new Map(), stops = new Map();
+      // The ZIP may contain stop_times before trips; make four bounded passes.
+      // Critically, never materialize an entire GTFS CSV into RAM.
+      await readGtfsFiles(filename, { 'routes.txt': r => { if (r.route_short_name?.trim() === '801') routeIds.add(r.route_id); } });
+      if (!routeIds.size) throw new Error('Route 801 not found in current GTFS');
+      await readGtfsFiles(filename, { 'trips.txt': t => { if (routeIds.has(t.route_id)) tripMap.set(t.trip_id, { trip_headsign: t.trip_headsign, direction_id: t.direction_id, shape_id: t.shape_id }); } });
+      const usedStops = new Set();
+      await readGtfsFiles(filename, { 'stop_times.txt': s => {
+        if (!tripMap.has(s.trip_id)) return;
+        if (!stopTimes.has(s.trip_id)) stopTimes.set(s.trip_id, []);
+        stopTimes.get(s.trip_id).push({ seq: Number(s.stop_sequence), stopId: s.stop_id, arrival: s.arrival_time });
+        usedStops.add(s.stop_id);
+      }});
+      for (const arr of stopTimes.values()) arr.sort((a, b) => a.seq - b.seq);
+      await readGtfsFiles(filename, { 'stops.txt': s => { if (usedStops.has(s.stop_id)) stops.set(s.stop_id, { name: s.stop_name, lat: Number(s.stop_lat), lon: Number(s.stop_lon) }); } });
+      const result = { tripMap, stopTimes, stops, shapes: new Map() };
+      schedule = result; lastStatic = Date.now();
+      console.log(`UL GTFS loaded: ${routeIds.size} routes, ${tripMap.size} trips, ${usedStops.size} stops`);
+      return result;
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  })();
+  try { return await staticPromise; } finally { staticPromise = null; }
+}
+function nearestStop(data, route, lat, lon) {
+  let best = Infinity, index = 0;
+  route.forEach((r, i) => { const p = data.stops.get(r.stopId); if (!p) return; const d = (p.lat - lat) ** 2 + ((p.lon - lon) * .62) ** 2; if (d < best) { best = d; index = i; } });
+  return index;
+}
+async function downloadRealtime() {
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const r = await fetch(`${base}/gtfs-rt/ul/VehiclePositions.pb?key=${encodeURIComponent(realtimeKey)}`, { signal: controller.signal });
+    if (!r.ok) throw new Error(`Trafiklab realtime HTTP ${r.status}`);
+    return Buffer.from(await r.arrayBuffer());
+  } finally { clearTimeout(timer); }
+}
+async function loadLive() {
+  if (latest && Date.now() - lastLive < 15000) return latest;
+  if (livePromise) return livePromise;
+  livePromise = (async () => {
+    const data = await loadSchedule();
+    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(await downloadRealtime());
+    const buses = [];
+    for (const e of feed.entity) {
+      const v = e.vehicle, lat = v?.position?.latitude, lon = v?.position?.longitude;
+      const tripId = v?.trip?.tripId;
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || !tripId) continue;
+      const trip = data.tripMap.get(tripId);
+      if (!trip) continue;
+      const times = data.stopTimes.get(tripId) || [];
+      let ix = v.currentStopSequence ? times.findIndex(s => s.seq >= Number(v.currentStopSequence)) : -1;
+      if (ix < 0) ix = nearestStop(data, times, lat, lon);
+      const dest = trip.trip_headsign || data.stops.get(times.at(-1)?.stopId)?.name || 'Okänt';
+      const nextStops = times.slice(ix, ix + 8).map(s => ({ name: data.stops.get(s.stopId)?.name || s.stopId, scheduled: s.arrival }));
+      const timestamp = v.timestamp ? new Date(Number(v.timestamp.toString()) * 1000).toISOString() : null;
+      buses.push({ id: v.vehicle?.id || e.id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, shape: [] });
+    }
+    latest = { updated: new Date().toISOString(), buses };
+    lastLive = Date.now();
+    return latest;
+  })();
+  try { return await livePromise; } finally { livePromise = null; }
+}
+app.get('/api/health', (req, res) => res.json({ configured: !!staticKey && !!realtimeKey, staticKeyConfigured: !!staticKey, realtimeKeyConfigured: !!realtimeKey, staticLoaded: !!schedule, lastLive: lastLive ? new Date(lastLive).toISOString() : null }));
+app.get('/api/vehicles', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!staticKey || !realtimeKey) return res.status(503).json({ error: 'Missing Trafiklab keys', buses: [] });
+  try { res.json(await loadLive()); }
+  catch (e) { console.error('Vehicle loading:', e); res.status(503).json({ error: e.message, buses: [], lastSuccess: latest?.updated || null }); }
+});
+app.listen(port, '0.0.0.0', () => console.log(`UL 801 listening on ${port}`));
