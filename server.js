@@ -18,6 +18,7 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 
 let schedule = null, lastStatic = 0, staticPromise = null;
 let latest = null, lastLive = 0, livePromise = null;
+let cachedPredictions = new Map(), predictionsAt = 0, predictionsPending = null;
 // Recent positions observed by THIS running server, not a historical UL feed.
 const trails = new Map();
 const MAX_TRAIL = 300;
@@ -135,6 +136,47 @@ async function downloadRealtime() {
     return Buffer.from(await r.arrayBuffer());
   } finally { clearTimeout(timer); }
 }
+
+// GTFS-RT TripUpdates: an actual reported/estimated stop time, not a fabricated delay.
+// Feed failure must never prevent vehicle positions from loading.
+async function loadPredictions() {
+  if (Date.now() - predictionsAt < 20000) return cachedPredictions;
+  if (predictionsPending) return predictionsPending;
+  predictionsPending = (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 9000);
+    try {
+      const r = await fetch(`${base}/gtfs-rt/ul/TripUpdates.pb?key=${encodeURIComponent(realtimeKey)}`, {signal:controller.signal});
+      if (!r.ok) throw Error(`TripUpdates HTTP ${r.status}`);
+      const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(await r.arrayBuffer()));
+      const found = new Map();
+      for (const e of feed.entity) {
+        const tu = e.tripUpdate, id = tu?.trip?.tripId;
+        if (!id) continue;
+        const stops = new Map();
+        for (const st of tu.stopTimeUpdate || []) {
+          const event = st.arrival || st.departure;
+          const epoch = event?.time == null ? null : Number(event.time.toString());
+          const delay = event?.delay == null ? null : Number(event.delay);
+          if (Number.isFinite(epoch) && epoch > 0) {
+            const obj = {expected: new Date(epoch*1000).toISOString(), delaySeconds: Number.isFinite(delay)?delay:null};
+            if (st.stopSequence != null) stops.set(`seq:${st.stopSequence}`, obj);
+            if (st.stopId) stops.set(`id:${st.stopId}`, obj);
+          }
+        }
+        found.set(id, stops);
+      }
+      cachedPredictions = found; predictionsAt = Date.now();
+      return found;
+    } catch(err) {
+      console.warn('TripUpdates not available (schedule-only fallback):', err.message);
+      predictionsAt = Date.now();
+      return cachedPredictions;
+    } finally { clearTimeout(timer); }
+  })();
+  try { return await predictionsPending; } finally { predictionsPending = null; }
+}
+
 async function loadLive() {
   if (latest && Date.now() - lastLive < 20000) return latest;
   if (livePromise) return livePromise;
@@ -142,6 +184,7 @@ async function loadLive() {
     const data = await loadSchedule();
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(await downloadRealtime());
     const buses = [];
+    const forecasts = await loadPredictions();
     for (const e of feed.entity) {
       const v = e.vehicle, lat = v?.position?.latitude, lon = v?.position?.longitude;
       const tripId = v?.trip?.tripId;
@@ -154,7 +197,8 @@ async function loadLive() {
       const dest = trip.trip_headsign || data.stops.get(times.at(-1)?.stopId)?.name || 'Okänt';
       const enrich = s => {
         const stop = data.stops.get(s.stopId);
-        return { name: stop?.name || s.stopId, scheduled: s.arrival, lat: stop?.lat ?? null, lon: stop?.lon ?? null, sequence: s.seq };
+        const prediction = forecasts.get(tripId)?.get(`seq:${s.seq}`) || forecasts.get(tripId)?.get(`id:${s.stopId}`) || null;
+        return { name: stop?.name || s.stopId, scheduled: s.arrival, expected: prediction?.expected ?? null, delaySeconds: prediction?.delaySeconds ?? null, lat: stop?.lat ?? null, lon: stop?.lon ?? null, sequence: s.seq };
       };
       const nextStops = times.slice(ix).map(enrich);
       const passedStops = times.slice(0, ix).map(enrich);
