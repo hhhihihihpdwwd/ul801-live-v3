@@ -18,6 +18,23 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 
 let schedule = null, lastStatic = 0, staticPromise = null;
 let latest = null, lastLive = 0, livePromise = null;
+// Recent positions observed by THIS running server, not a historical UL feed.
+const trails = new Map();
+const MAX_TRAIL = 300;
+const MAX_AGE_MS = 3 * 60 * 60 * 1000;
+function recordTrail(vehicleId, tripId, lat, lon, timestamp) {
+  const now = Date.now();
+  const key = String(vehicleId) + ':' + String(tripId);
+  let points = trails.get(key) || [];
+  points = points.filter(p => now - p.t < MAX_AGE_MS);
+  const t = timestamp ? Date.parse(timestamp) : now;
+  const last = points.at(-1);
+  if (Number.isFinite(t) && t <= now + 60000 && (!last || (t > last.t && (Math.abs(lat-last.lat)>0.00001 || Math.abs(lon-last.lon)>0.00001)))) points.push({lat,lon,t});
+  if (points.length > MAX_TRAIL) points = points.slice(-MAX_TRAIL);
+  trails.set(key, points);
+  if (trails.size > 300) for(const [k,pts] of trails) if (!pts.length || now - pts.at(-1).t > MAX_AGE_MS) trails.delete(k);
+  return points.map(({lat,lon,t}) => ({lat,lon,timestamp:new Date(t).toISOString()}));
+}
 const yesterday = 23 * 60 * 60 * 1000;
 
 async function downloadFile(url, filename) {
@@ -101,7 +118,7 @@ async function downloadRealtime() {
   } finally { clearTimeout(timer); }
 }
 async function loadLive() {
-  if (latest && Date.now() - lastLive < 15000) return latest;
+  if (latest && Date.now() - lastLive < 20000) return latest;
   if (livePromise) return livePromise;
   livePromise = (async () => {
     const data = await loadSchedule();
@@ -117,9 +134,16 @@ async function loadLive() {
       let ix = v.currentStopSequence ? times.findIndex(s => s.seq >= Number(v.currentStopSequence)) : -1;
       if (ix < 0) ix = nearestStop(data, times, lat, lon);
       const dest = trip.trip_headsign || data.stops.get(times.at(-1)?.stopId)?.name || 'Okänt';
-      const nextStops = times.slice(ix, ix + 8).map(s => ({ name: data.stops.get(s.stopId)?.name || s.stopId, scheduled: s.arrival }));
+      const enrich = s => {
+        const stop = data.stops.get(s.stopId);
+        return { name: stop?.name || s.stopId, scheduled: s.arrival, lat: stop?.lat ?? null, lon: stop?.lon ?? null, sequence: s.seq };
+      };
+      const nextStops = times.slice(ix).map(enrich);
+      const passedStops = times.slice(0, ix).map(enrich);
       const timestamp = v.timestamp ? new Date(Number(v.timestamp.toString()) * 1000).toISOString() : null;
-      buses.push({ id: v.vehicle?.id || e.id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, shape: [] });
+      const id = v.vehicle?.id || e.id;
+      const trail = recordTrail(id, tripId, lat, lon, timestamp);
+      buses.push({ id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, passedStops, trail, shape: [] });
     }
     latest = { updated: new Date().toISOString(), buses };
     lastLive = Date.now();
