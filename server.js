@@ -19,11 +19,6 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 let schedule = null, lastStatic = 0, staticPromise = null;
 let latest = null, lastLive = 0, livePromise = null;
 let cachedPredictions = new Map(), predictionsAt = 0, predictionsPending = null;
-let startupError = null, lastViewerAt = 0, nextStaticRetry = 0;
-const LIVE_MIN_MS = 35000; // Realtime feed: once per ~35 s, regardless of browser refresh rate.
-const BACKGROUND_REFRESH_MS = 45000; // Poll only while people are actively using the site.
-const STATIC_RETRY_MS = 90000;
-
 // Recent positions observed by THIS running server, not a historical UL feed.
 const trails = new Map();
 const MAX_TRAIL = 300;
@@ -82,72 +77,49 @@ async function readGtfsFiles(zipPath, handlers) {
 async function loadSchedule() {
   if (schedule && Date.now() - lastStatic < yesterday) return schedule;
   if (staticPromise) return staticPromise;
-  if (!schedule && Date.now() < nextStaticRetry) throw new Error(startupError || 'Väntar på nytt försök att läsa tidtabellen');
   staticPromise = (async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'ul801-'));
     const filename = path.join(directory, 'ul.zip');
-    let handedOff = false;
     try {
-      console.log('UL 801: warming up the schedule in background');
       await downloadFile(`${base}/gtfs/ul/ul.zip?key=${encodeURIComponent(staticKey)}`, filename);
-      const routeIds = new Set(), tripMap = new Map(), stopTimes = new Map(), allStops = new Map();
-      // Streaming CSV reading: only route 801 trips and stop times are retained.
+      const routeIds = new Set(), tripMap = new Map(), stopTimes = new Map(), stops = new Map();
+      // The ZIP may contain stop_times before trips; make four bounded passes.
+      // Critically, never materialize an entire GTFS CSV into RAM.
       await readGtfsFiles(filename, { 'routes.txt': r => { if (r.route_short_name?.trim() === '801') routeIds.add(r.route_id); } });
-      if (!routeIds.size) throw new Error('Linje 801 saknas i GTFS');
-      await readGtfsFiles(filename, { 'trips.txt': t => {
-        if (routeIds.has(t.route_id)) tripMap.set(t.trip_id, { trip_headsign:t.trip_headsign, direction_id:t.direction_id, shape_id:t.shape_id });
-      }});
+      if (!routeIds.size) throw new Error('Route 801 not found in current GTFS');
+      await readGtfsFiles(filename, { 'trips.txt': t => { if (routeIds.has(t.route_id)) tripMap.set(t.trip_id, { trip_headsign: t.trip_headsign, direction_id: t.direction_id, shape_id: t.shape_id }); } });
       const usedStops = new Set();
-      // Stops and times in a single pass. Keeping all stop definitions temporarily
-      // is cheaper than an additional full pass over the large stop_times CSV.
-      await readGtfsFiles(filename, {
-        'stop_times.txt': st => {
-          if (!tripMap.has(st.trip_id)) return;
-          if (!stopTimes.has(st.trip_id)) stopTimes.set(st.trip_id, []);
-          stopTimes.get(st.trip_id).push({seq:Number(st.stop_sequence),stopId:st.stop_id,arrival:st.arrival_time});
-          usedStops.add(st.stop_id);
-        },
-        'stops.txt': st => { allStops.set(st.stop_id, {name:st.stop_name,lat:Number(st.stop_lat),lon:Number(st.stop_lon)}); }
-      });
-      for (const times of stopTimes.values()) times.sort((a,b)=>a.seq-b.seq);
-      const stops = new Map();
-      for (const id of usedStops) if (allStops.has(id)) stops.set(id, allStops.get(id));
-      const result = { tripMap, stopTimes, stops, shapes:new Map() };
-      schedule = result;
-      lastStatic = Date.now();
-      startupError = null;
-      console.log(`UL 801 schedule ready: ${tripMap.size} trips; ${usedStops.size} stops. Preparing shapes separately.`);
-      // Shapes are optional for listing buses. Parse them separately so visitors
-      // can see vehicles BEFORE this relatively expensive step has finished.
-      handedOff = true;
-      void (async()=>{
-        try {
-          const usage = new Map();
-          for(const trip of tripMap.values()) if(trip.shape_id) usage.set(trip.shape_id,(usage.get(trip.shape_id)||0)+1);
-          const wanted = new Set([...usage].sort((a,b)=>b[1]-a[1]).slice(0,40).map(x=>x[0]));
-          const shapes = new Map();
-          let total=0;
-          await readGtfsFiles(filename, {'shapes.txt': r=>{
-            if(!wanted.has(r.shape_id))return;
-            let a=shapes.get(r.shape_id);
-            if(!a){a=[];shapes.set(r.shape_id,a)}
-            if(a.length>=4500||total>=95000)return;
-            const lat=Number(r.shape_pt_lat),lon=Number(r.shape_pt_lon);
-            if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
-            a.push([Number(lat.toFixed(5)),Number(lon.toFixed(5))]);total++;
-          }});
-          result.shapes=shapes;
-          console.log(`UL 801 shapes ready: ${shapes.size}, ${total} points`);
-          // The next update will deliver the full road-following route.
-        } catch(e){console.warn('UL shape data unavailable; vehicles still work:',e.message)}
-        finally {await rm(directory,{recursive:true,force:true})}
-      })();
+      await readGtfsFiles(filename, { 'stop_times.txt': s => {
+        if (!tripMap.has(s.trip_id)) return;
+        if (!stopTimes.has(s.trip_id)) stopTimes.set(s.trip_id, []);
+        stopTimes.get(s.trip_id).push({ seq: Number(s.stop_sequence), stopId: s.stop_id, arrival: s.arrival_time });
+        usedStops.add(s.stop_id);
+      }});
+      for (const arr of stopTimes.values()) arr.sort((a, b) => a.seq - b.seq);
+      await readGtfsFiles(filename, { 'stops.txt': s => { if (usedStops.has(s.stop_id)) stops.set(s.stop_id, { name: s.stop_name, lat: Number(s.stop_lat), lon: Number(s.stop_lon) }); } });
+      // GTFS shape coordinates are the planned road-following route. Read only shapes
+      // used by route 801, with strict per-shape and global memory caps.
+      const shapeUsage = new Map();
+      for (const trip of tripMap.values()) if (trip.shape_id) shapeUsage.set(trip.shape_id, (shapeUsage.get(trip.shape_id)||0)+1);
+      const wantedShapes = new Set([...shapeUsage].sort((a,b)=>b[1]-a[1]).slice(0,40).map(x=>x[0]));
+      const shapes = new Map();
+      let totalShapePoints = 0;
+      await readGtfsFiles(filename, { 'shapes.txt': r => {
+        if (!wantedShapes.has(r.shape_id)) return;
+        let arr = shapes.get(r.shape_id);
+        if (!arr) { arr = []; shapes.set(r.shape_id, arr); }
+        if (arr.length >= 4500 || totalShapePoints >= 95000) return;
+        const lat = Number(r.shape_pt_lat), lon = Number(r.shape_pt_lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+        arr.push([Number(lat.toFixed(5)), Number(lon.toFixed(5))]);
+        totalShapePoints++;
+      }});
+      console.log(`UL 801 planned shape lines loaded: ${shapes.size}, points: ${totalShapePoints} (shape cap 4500, global cap 95000)`);
+      const result = { tripMap, stopTimes, stops, shapes };
+      schedule = result; lastStatic = Date.now();
+      console.log(`UL GTFS loaded: ${routeIds.size} routes, ${tripMap.size} trips, ${usedStops.size} stops`);
       return result;
-    } catch(e) {
-      startupError=e.message;
-      nextStaticRetry=Date.now()+STATIC_RETRY_MS;
-      throw e;
-    } finally { if(!handedOff) await rm(directory,{recursive:true,force:true}); }
+    } finally { await rm(directory, { recursive: true, force: true }); }
   })();
   try { return await staticPromise; } finally { staticPromise = null; }
 }
@@ -168,7 +140,7 @@ async function downloadRealtime() {
 // GTFS-RT TripUpdates: an actual reported/estimated stop time, not a fabricated delay.
 // Feed failure must never prevent vehicle positions from loading.
 async function loadPredictions() {
-  if (Date.now() - predictionsAt < 90000) return cachedPredictions;
+  if (Date.now() - predictionsAt < 20000) return cachedPredictions;
   if (predictionsPending) return predictionsPending;
   predictionsPending = (async () => {
     const controller = new AbortController();
@@ -206,15 +178,13 @@ async function loadPredictions() {
 }
 
 async function loadLive() {
-  if (latest && Date.now() - lastLive < LIVE_MIN_MS) return latest;
+  if (latest && Date.now() - lastLive < 20000) return latest;
   if (livePromise) return livePromise;
   livePromise = (async () => {
     const data = await loadSchedule();
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(await downloadRealtime());
     const buses = [];
-    // Predictions must never delay the actual GPS vehicles response.
-    void loadPredictions();
-    const forecasts = cachedPredictions;
+    const forecasts = await loadPredictions();
     for (const e of feed.entity) {
       const v = e.vehicle, lat = v?.position?.latitude, lon = v?.position?.longitude;
       const tripId = v?.trip?.tripId;
@@ -230,58 +200,24 @@ async function loadLive() {
         const prediction = forecasts.get(tripId)?.get(`seq:${s.seq}`) || forecasts.get(tripId)?.get(`id:${s.stopId}`) || null;
         return { name: stop?.name || s.stopId, scheduled: s.arrival, expected: prediction?.expected ?? null, delaySeconds: prediction?.delaySeconds ?? null, lat: stop?.lat ?? null, lon: stop?.lon ?? null, sequence: s.seq };
       };
-      const allEnrichedStops = times.map(enrich);
-      const nextStops = allEnrichedStops.slice(ix);
-      const passedStops = allEnrichedStops.slice(0, ix);
+      const nextStops = times.slice(ix).map(enrich);
+      const passedStops = times.slice(0, ix).map(enrich);
       const timestamp = v.timestamp ? new Date(Number(v.timestamp.toString()) * 1000).toISOString() : null;
       const id = v.vehicle?.id || e.id;
       const trail = recordTrail(id, tripId, lat, lon, timestamp);
-      buses.push({ id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, passedStops, allStops:allEnrichedStops, nextStopIndex:ix, trail, shape: data.shapes.get(trip.shape_id) || [], routeIsPlanned: true });
+      buses.push({ id, tripId, lat, lon, bearing: v.position.bearing ?? null, direction: trip.direction_id, destination: dest, timestamp, nextStops, passedStops, trail, shape: data.shapes.get(trip.shape_id) || [], routeIsPlanned: true });
     }
     latest = { updated: new Date().toISOString(), buses };
-    startupError = null;
     lastLive = Date.now();
     return latest;
   })();
   try { return await livePromise; } finally { livePromise = null; }
 }
-// All API requests return quickly. Clients receive a loading state rather than
-// blocking inside an HTTP request while the large GTFS archive is processed.
-function refreshInBackground() {
-  if (!staticKey || !realtimeKey) return;
-  if (livePromise || (lastLive && Date.now()-lastLive<LIVE_MIN_MS)) return;
-  void loadLive().catch(err=>{
-    startupError=err.message;
-    console.error('UL 801 background refresh:',err.message);
-  });
-}
-app.get('/api/health', (req,res)=>res.json({
-  configured:!!staticKey&&!!realtimeKey,
-  staticKeyConfigured:!!staticKey,
-  realtimeKeyConfigured:!!realtimeKey,
-  staticLoaded:!!schedule,
-  lastLive:lastLive?new Date(lastLive).toISOString():null,
-  loading:!!staticPromise || !!livePromise,
-  error:startupError
-}));
-app.get('/api/vehicles', (req,res)=>{
-  res.set('Cache-Control','private, no-store');
-  lastViewerAt=Date.now();
-  if(!staticKey||!realtimeKey) return res.status(503).json({error:'Trafiklab-nycklar saknas',buses:[]});
-  refreshInBackground();
-  if(latest) return res.json({...latest,loading:false,refreshing:!!livePromise,stale:Date.now()-lastLive>180000,error:startupError});
-  // A failure is distinguishable from an initial load in the client.
-  return res.json({updated:null,buses:[],loading:true,phase:schedule?'live':'schedule',error:startupError});
+app.get('/api/health', (req, res) => res.json({ configured: !!staticKey && !!realtimeKey, staticKeyConfigured: !!staticKey, realtimeKeyConfigured: !!realtimeKey, staticLoaded: !!schedule, lastLive: lastLive ? new Date(lastLive).toISOString() : null }));
+app.get('/api/vehicles', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!staticKey || !realtimeKey) return res.status(503).json({ error: 'Missing Trafiklab keys', buses: [] });
+  try { res.json(await loadLive()); }
+  catch (e) { console.error('Vehicle loading:', e); res.status(503).json({ error: e.message, buses: [], lastSuccess: latest?.updated || null }); }
 });
-const server=app.listen(port,'0.0.0.0',()=>{
-  console.log(`UL 801 listening on ${port}`);
-  // Preparing the static data starts as soon as Render starts this process:
-  // it does NOT require the visitor to keep their browser tab open.
-  setTimeout(()=>refreshInBackground(),200);
-});
-// When a viewer is active, proactively refresh the shared cache. Browser
-// intervals of 5s or 10s do NOT trigger a matching rate of Trafiklab calls.
-const timer=setInterval(()=>{
-  if(Date.now()-lastViewerAt<120000)refreshInBackground();
-},BACKGROUND_REFRESH_MS);
-timer.unref?.();
+app.listen(port, '0.0.0.0', () => console.log(`UL 801 listening on ${port}`));
