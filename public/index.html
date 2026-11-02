@@ -1,31 +1,6 @@
 <!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UL 801 · Live</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>
 :root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#eaf2f0;background:#101b21}*{box-sizing:border-box}body{margin:0}header{padding:15px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #31414a;gap:14px}h1{font-size:19px;margin:0}small,.muted{color:#adbec4}main{display:grid;grid-template-columns:1.35fr 1fr;min-height:calc(100dvh - 73px)}.mapPane{position:relative;min-height:550px;align-self:stretch;overflow:hidden}#map{position:absolute;inset:0;height:100%;min-height:0;width:100%;background:#263743}.panel{padding:20px;display:flex;flex-direction:column;gap:13px;min-width:0}.status{background:#1a2b33;border:1px solid #354750;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6}.status b{color:#e5fcab}.controls{display:flex;gap:7px;flex-wrap:wrap}button,select{background:#223740;border:1px solid #53636a;color:white;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}button.active{background:#e5ed33;color:#142128;border-color:#e5ed33}.display{background:#f5e630;border-radius:13px;color:#19252a;overflow:hidden;box-shadow:0 14px 28px #0003}.top{display:flex;gap:14px;padding:18px;align-items:center}.line{font-size:41px;font-weight:900;background:#142931;color:#f6e838;padding:6px 12px;border-radius:7px}.destination{font-size:22px;line-height:1.15;font-weight:850}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#e7da26;padding:10px 16px;font-weight:750;font-size:13px}.stopList{max-height:47vh;overflow:auto;position:relative}.stopList.hasStops .stop:before{content:"";position:absolute;left:21px;top:-1px;bottom:-1px;width:2px;background:#26383b;z-index:0;pointer-events:none}.stopList.hasStops .stop:first-child:before{top:50%}.stopList.hasStops .stop:last-child:before{bottom:50%}.stop{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 17px;border-top:1px solid #c5bd33;font-size:14px;position:relative;isolation:isolate;min-height:53px}.stop.next{background:#fff27e}.stop.passed{opacity:.64}.dot{height:12px;width:12px;border:3px solid #182b30;border-radius:50%;position:relative;background:#f5e630;z-index:2;margin-left:-1px}.stop.next .dot{background:#fff27e}.stop.passed .dot{background:#a9a52f}.stopName{font-weight:720}.time{text-align:right;font-variant-numeric:tabular-nums;font-weight:850}.when{font-size:11px;font-weight:500;color:#44504f}.display footer{padding:11px 16px;background:#e5d92a;font-size:11px}.note{font-size:12px;color:#aec0c7;line-height:1.55}.busPin{background:#f7e738;border:3px solid #142a35;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;color:#142a35;font-size:12px;font-weight:900;box-shadow:0 2px 8px #0007}.pinSelected .busPin{outline:3px solid white}.stopPin{height:10px;width:10px;background:#f5e630;border:2px solid #284c57;border-radius:50%;box-shadow:0 0 0 2px #fff7}.stopPin.passed{background:#7d969d}.stopPin.next{width:15px;height:15px;background:white;border:3px solid #dfbc00}.headActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.headActions select{font-size:12px;padding:7px}.stamp{white-space:nowrap}.telemetry{display:none;background:#142a34;border:1px solid #43606a;border-radius:12px;padding:15px 18px;align-items:center;justify-content:space-between;gap:18px}.telemetry.visible{display:flex}.speedNum{font-size:36px;font-weight:850;font-variant-numeric:tabular-nums;color:#f4df25}.speedUnit{font-size:12px;color:#bdced3}.gauge{width:116px;height:60px;position:relative}.gauge svg{width:116px;height:68px}.gaugeValue{font-weight:800;color:#f4df25}.oldTime{color:#727541;text-decoration:line-through;margin-right:8px;font-size:12px}.newTime{color:#162b2d;font-size:17px}.miniBus{filter:drop-shadow(0 3px 4px #14233388);transform:translateZ(0)}.leaflet-marker-icon{will-change:transform}@media(max-width:900px){main{grid-template-columns:1fr;display:flex;flex-direction:column}.mapPane{height:42dvh;min-height:270px;max-height:450px}#map{min-height:0}.panel{padding:12px;gap:11px}.stopList{max-height:48dvh}.destination{font-size:20px}header{padding:12px;align-items:flex-start}.headActions{justify-content:flex-end}.telemetry{padding:12px 15px}}@media(max-width:530px){header{gap:8px;flex-wrap:wrap}header h1{font-size:16px}.headActions{width:100%;justify-content:space-between}.stamp{font-size:11px}.mapPane{height:37dvh;min-height:240px}#map{min-height:0}.panel{padding:10px}.top{padding:13px}.line{font-size:32px}.destination{font-size:18px}.stop{grid-template-columns:18px minmax(0,1fr) auto;padding:12px 14px;font-size:13px;gap:8px}.stopList.hasStops .stop:before{left:18px}.stopName{overflow-wrap:anywhere}.time{max-width:126px}.controls button,.headActions select{min-height:40px}.telemetry .speedNum{font-size:29px}.gauge,.gauge svg{width:96px}.note{font-size:11px}}
-
-/* V12: complete trip history and optional immersive sound */
-.stopNav{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#eee02c;flex-wrap:wrap}
-.stopNav button{background:#253c3d;color:#fff;border:none;font-weight:700;padding:7px 11px;font-size:11px;min-height:33px}
-.stopNav span{margin-left:auto;color:#4b4e34;font-size:11px}
-.stopList{max-height:min(53vh,560px);overscroll-behavior:contain}
-.stop.passed .stopName{font-weight:500}
-.audioPanel{background:#172a33;border:1px solid #41616b;border-radius:13px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
-.audioPanel[hidden]{display:none}
-.audioHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.audioHead strong{font-size:15px;color:#e7f4ef}
-.audioHead button{background:#f5e630;color:#19272d;border:none;white-space:nowrap;font-size:12px}
-.audioOptions{display:flex;gap:14px;flex-wrap:wrap}
-.audioOptions label{font-size:12px;color:#dae8e9;display:flex;align-items:center;gap:7px;white-space:nowrap;cursor:pointer}
-.audioOptions input{accent-color:#f5e630;width:16px;height:16px}
-.volumeRow{display:flex;align-items:center;gap:10px;font-size:12px}
-.volumeRow input{flex:1;accent-color:#f5e630;min-width:30px}
-.volumeRow span{min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
-.audioNote{font-size:11px;color:#a9c1c8;line-height:1.4}
-@media(max-width:530px){.stopList{max-height:42dvh}.audioPanel{padding:12px}.audioOptions{gap:10px}.audioHead strong{font-size:14px}.stopNav{padding:8px 10px}.stopNav button{padding:7px 8px}.stopNav span{margin-left:0}}
-</style></head><body><header><div><h1>UL <span style="color:#f5e630">801</span> · Trafiköversikt</h1><small>Uppsala Centralstation ↔ Arlanda flygplats</small></div><div class="headActions"><select id="frequency" aria-label="Uppdateringsintervall"><option value="20000">Standard · 20 s</option><option value="5000">Visning · 5 s</option><option value="10000">Snabb · 10 s</option><option value="45000">Sparläge · 45 s</option></select><small id="clock" class="stamp"></small></div></header><main><section class="mapPane"><div id="map"></div></section><section class="panel"><div class="status" id="status">Kontrollerar anslutningen …</div><div class="controls" id="controls"><button id="auto" class="active">Automatiskt val</button><button id="reload">Uppdatera nu</button></div><div class="display"><div class="top"><div class="line">801</div><div><div style="font-size:12px;font-weight:800">DESTINATION</div><div class="destination" id="destination">Ingen tur vald</div></div></div><div class="bar"><span>Hela resan · hållplatser</span><span>Tidtabell / Prognos</span></div><div class="stopNav"><button id="showFirst" type="button">Från start</button><button id="showCurrent" type="button">Nästa hållplats</button><span id="stopCount" class="muted"></span></div><div id="stops" class="stopList"><div class="stop">Inga avgångsdata ännu</div></div><footer id="displayFooter">Tidtabell · Trafikprognoser om tillgängliga · UL-inspirerad design</footer></div><div id="telemetry" class="telemetry"><div><div style="font-size:12px;color:#b8cbd1">UPPSKATTAD HASTIGHET</div><div><span id="speed" class="speedNum">–</span><span class="speedUnit"> km/h</span></div><div style="font-size:11px;color:#b8cbd1" id="speedDetail">Beräknat från GPS-positioner</div></div><div class="gauge"><svg viewBox="0 0 120 74"><path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#526b75" stroke-width="10" stroke-linecap="round"/><path id="gaugeArc" d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#f4df25" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 151"/></svg></div></div><section class="audioPanel" id="audioPanel" hidden>
- <div class="audioHead"><div><strong>◉ Ljud ombord</strong><div class="audioNote">Simulerad bussmiljö · svensk talsyntes</div></div><button id="audioToggle" type="button">Slå på ljud</button></div>
- <div class="audioOptions"><label><input type="checkbox" id="soundMotor" checked> Motor & väg</label><label><input type="checkbox" id="soundPeople" checked> Passagerare</label><label><input type="checkbox" id="soundVoice" checked> Hållplatsutrop</label></div>
- <div class="volumeRow"><label for="soundVolume">Volym</label><input id="soundVolume" type="range" min="0" max="100" value="22"><span id="soundVolumeValue">22 %</span></div>
- <div class="audioNote" id="audioHint">Välj en buss för att börja lyssna. Ljudet stannar när sidan lämnas.</div>
- </section><div class="note">GPS-positioner från Trafiklab. Blått visar körd del och grått återstående del av planerad linjesträckning vid vald buss. Körningen mellan GPS-rapporter är en uppskattning, inte uppmätt realtidsposition. Prognostider visas endast när Trafiklab skickar TripUpdates. Hastighet är beräknad från GPS.</div></section></main>
+</style></head><body><header><div><h1>UL <span style="color:#f5e630">801</span> · Trafiköversikt</h1><small>Uppsala Centralstation ↔ Arlanda flygplats</small></div><div class="headActions"><select id="frequency" aria-label="Uppdateringsintervall"><option value="20000">Standard · 20 s</option><option value="5000">Visning · 5 s</option><option value="10000">Snabb · 10 s</option><option value="45000">Sparläge · 45 s</option></select><small id="clock" class="stamp"></small></div></header><main><section class="mapPane"><div id="map"></div></section><section class="panel"><div class="status" id="status">Kontrollerar anslutningen …</div><div class="controls" id="controls"><button id="auto" class="active">Automatiskt val</button><button id="reload">Uppdatera nu</button></div><div class="display"><div class="top"><div class="line">801</div><div><div style="font-size:12px;font-weight:800">DESTINATION</div><div class="destination" id="destination">Ingen tur vald</div></div></div><div class="bar"><span>Nästa hållplatser</span><span>Tidtabell / Prognos</span></div><div id="stops" class="stopList"><div class="stop">Inga avgångsdata ännu</div></div><footer id="displayFooter">Tidtabell · Trafikprognoser om tillgängliga · UL-inspirerad design</footer></div><div id="telemetry" class="telemetry"><div><div style="font-size:12px;color:#b8cbd1">UPPSKATTAD HASTIGHET</div><div><span id="speed" class="speedNum">–</span><span class="speedUnit"> km/h</span></div><div style="font-size:11px;color:#b8cbd1" id="speedDetail">Beräknat från GPS-positioner</div></div><div class="gauge"><svg viewBox="0 0 120 74"><path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#526b75" stroke-width="10" stroke-linecap="round"/><path id="gaugeArc" d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#f4df25" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 151"/></svg></div></div><div class="note">GPS-positioner från Trafiklab. Blått visar körd del och grått återstående del av planerad linjesträckning vid vald buss. Körningen mellan GPS-rapporter är en uppskattning, inte uppmätt realtidsposition. Prognostider visas endast när Trafiklab skickar TripUpdates. Hastighet är beräknad från GPS.</div></section></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 // Keep a modest ring of recently visible map tiles during map movement.
 // OpenStreetMap prohibits bulk prefetching of unseen areas: use the ordinary browser HTTP cache.
@@ -153,113 +128,8 @@ function liveStopLists(bus){
  idx=Math.max(0,Math.min(idx,all.length));
  return {passed:all.slice(0,idx),next:all.slice(idx)};
 }
-
-// Generated original ambient sound; no recordings of UL or identifiable conversations.
-// Audio only activates in response to a bus click or the sound toggle (mobile safe).
-let soundEnabled=false, soundMutedByUser=false;
-let announcedStopKey=null, announcedGpsTime=0, userBrowsingStops=false;
-const soundKit=(()=>{
-  let ctx=null,output=null,motorOsc=null,motorGain=null,roadGain=null,crowdGain=null;
-  let noiseSource=null,crowdSource=null,ambient=0,wiggleTimer=null;
-  function noiseBuffer(seconds){const b=ctx.createBuffer(1,Math.round(ctx.sampleRate*seconds),ctx.sampleRate);const a=b.getChannelData(0);let x=0;for(let i=0;i<a.length;i++){x=(.97*x)+(.03*(Math.random()*2-1));a[i]=x*3.0;}return b;}
-  function create(){
-    const C=window.AudioContext||window.webkitAudioContext;
-    if(!C)throw Error('Ljudmotorn stöds inte av den här webbläsaren');
-    ctx=new C();output=ctx.createGain();output.gain.value=0;output.connect(ctx.destination);
-    const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=200;
-    motorOsc=ctx.createOscillator();motorOsc.type='sawtooth';motorOsc.frequency.value=54;
-    motorGain=ctx.createGain();motorGain.gain.value=.045;
-    motorOsc.connect(low);low.connect(motorGain);motorGain.connect(output);motorOsc.start();
-    noiseSource=ctx.createBufferSource();noiseSource.buffer=noiseBuffer(3);noiseSource.loop=true;
-    const roadFilter=ctx.createBiquadFilter();roadFilter.type='lowpass';roadFilter.frequency.value=750;
-    roadGain=ctx.createGain();roadGain.gain.value=.13;
-    noiseSource.connect(roadFilter);roadFilter.connect(roadGain);roadGain.connect(output);noiseSource.start();
-    crowdSource=ctx.createBufferSource();crowdSource.buffer=noiseBuffer(3);crowdSource.loop=true;
-    const crowdFilter=ctx.createBiquadFilter();crowdFilter.type='bandpass';crowdFilter.frequency.value=440;crowdFilter.Q.value=.45;
-    crowdGain=ctx.createGain();crowdGain.gain.value=.012;
-    crowdSource.connect(crowdFilter);crowdFilter.connect(crowdGain);crowdGain.connect(output);crowdSource.start();
-    // Quiet synthetic murmuring; no meaningful speech/recorded passengers.
-    wiggleTimer=setInterval(()=>{if(ctx?.state==='running')crowdGain.gain.setTargetAtTime(.006+Math.random()*.019,ctx.currentTime,.7)},2600);
-  }
-  async function start(){if(!ctx)create();await ctx.resume();const n=ctx.currentTime;output.gain.setTargetAtTime(Number(document.getElementById('soundVolume').value)/100,n,.15)}
-  function stop(){if(!ctx)return;output.gain.setTargetAtTime(0,ctx.currentTime,.1);void ctx.suspend().catch(()=>{});}
-  function adjust(bus){if(!ctx||!bus||!soundEnabled)return;
-    const n=ctx.currentTime,speed=gpsHistory.get(bus.id)?.speed;
-    // Location and speed only approximate the audio mood, not the road class.
-    const openRoad=(Number.isFinite(speed)&&speed>52)|| (bus.lat<59.78&&bus.lat>59.65&&bus.lon>17.72);
-    const sp=Number.isFinite(speed)?Math.max(0,Math.min(speed,110)):(openRoad?70:28);
-    motorOsc.frequency.setTargetAtTime(43+sp*.38,n,.6);
-    motorGain.gain.setTargetAtTime(document.getElementById('soundMotor').checked?(openRoad?.028:.044):0,n,.6);
-    roadGain.gain.setTargetAtTime(document.getElementById('soundMotor').checked?(openRoad?.28:.12):0,n,.7);
-    crowdGain.gain.setTargetAtTime(document.getElementById('soundPeople').checked?.015:0,n,.7);
-    output.gain.setTargetAtTime(Number(document.getElementById('soundVolume').value)/100,n,.15);
-    document.getElementById('audioHint').textContent=openRoad?'Simulerat landsvägs- och motorvägsljud':'Simulerat stadsljud · hastighet från GPS om tillgänglig';
-  }
-  function voiceDuck(enable){if(!ctx||!soundEnabled)return;const n=ctx.currentTime;output.gain.setTargetAtTime(enable?.08:Number(document.getElementById('soundVolume').value)/100,n,.12)}
-  return {start,stop,adjust,voiceDuck};
-})();
-function audioStop(){soundEnabled=false;soundKit.stop();if('speechSynthesis'in window)window.speechSynthesis.cancel();document.getElementById('audioToggle').textContent='Slå på ljud';}
-function audioStart(bus){if(!bus)return;
- soundEnabled=true;document.getElementById('audioToggle').textContent='Stäng av ljud';
- soundKit.start().then(()=>soundKit.adjust(bus)).catch(e=>{document.getElementById('audioHint').textContent=e.message;audioStop()});
-}
-function speakStop(name){
- if(!soundEnabled||!document.getElementById('soundVoice').checked||!('speechSynthesis'in window)||!name)return;
- const synth=window.speechSynthesis;synth.cancel();const utter=new SpeechSynthesisUtterance('Nästa hållplats: '+name+'.');utter.lang='sv-SE';utter.rate=.93;utter.pitch=1;utter.volume=Math.max(.1,Number(document.getElementById('soundVolume').value)/100);
- const voices=synth.getVoices();utter.voice=voices.find(v=>v.lang?.toLowerCase().startsWith('sv'))||null;
- utter.onstart=()=>soundKit.voiceDuck(true);utter.onend=()=>soundKit.voiceDuck(false);utter.onerror=()=>soundKit.voiceDuck(false);
- synth.speak(utter);
-}
-function noteNextStop(bus,progress,initial=false){
- if(!bus||!progress?.next?.length||!soundEnabled)return;
- const s=progress.next[0],key=String(bus.id)+'|'+String(bus.tripId)+'|'+String(s.sequence||s.name);
- const t=Date.parse(bus.timestamp||'');
- if(announcedStopKey===key)return;
- if(!initial&&(!Number.isFinite(t)||t<=announcedGpsTime))return;
- announcedGpsTime=Number.isFinite(t)?t:Date.now();announcedStopKey=key;
- speakStop(s.name);
-}
-function chooseBus(id){const bus=buses.find(x=>x.id===id);if(!bus)return;
- const changed=selected!==id;selected=id;
- if(changed){userBrowsingStops=false;announcedStopKey=null;announcedGpsTime=0;}
- // This click is the required direct user gesture for audio playback on iOS.
- if(!soundMutedByUser)audioStart(bus);
- redraw();
- if(changed)noteNextStop(bus,liveStopLists(bus),true);
-}
-function audioOptionsChanged(){const b=buses.find(x=>x.id===selected);if(soundEnabled)soundKit.adjust(b)}
-document.getElementById('audioToggle').onclick=()=>{
- const b=buses.find(x=>x.id===selected);if(!b)return;
- if(soundEnabled){soundMutedByUser=true;audioStop()}
- else{soundMutedByUser=false;audioStart(b);noteNextStop(b,liveStopLists(b),true)}
-};
-for(const id of ['soundMotor','soundPeople','soundVoice','soundVolume'])document.getElementById(id).addEventListener('input',()=>{
- document.getElementById('soundVolumeValue').textContent=document.getElementById('soundVolume').value+' %';audioOptionsChanged();
-});
-document.getElementById('stops').addEventListener('wheel',()=>userBrowsingStops=true,{passive:true});
-document.getElementById('stops').addEventListener('touchstart',()=>userBrowsingStops=true,{passive:true});
-function scrollStops(mode){const list=document.getElementById('stops');if(mode==='start'){userBrowsingStops=true;list.scrollTo({top:0,behavior:'smooth'})}
- else{userBrowsingStops=false;const el=list.querySelector('.stop.next');if(el)list.scrollTo({top:Math.max(0,el.offsetTop-list.offsetTop-list.clientHeight*.36),behavior:'smooth'})}}
-document.getElementById('showFirst').onclick=()=>scrollStops('start');
-document.getElementById('showCurrent').onclick=()=>scrollStops('next');
-window.addEventListener('pagehide',audioStop);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){audioStop()} });
-function redraw(){const found=new Set(buses.map(b=>b.id));for(const [id,p] of pins)if(!found.has(id)){map.removeLayer(p);pins.delete(id);const job=animationJobs.get(id);if(job)cancelAnimationFrame(job.raf);animationJobs.delete(id);gpsHistory.delete(id)}const active=buses.find(x=>x.id===selected)||buses[0];for(const bus of buses){let p=pins.get(bus.id);if(!p){p=L.marker([bus.lat,bus.lon],{icon:icon(bus.id===active?.id,bus.bearing)}).addTo(map).on('click',()=>chooseBus(bus.id));pins.set(bus.id,p)}animateMarker(p,[bus.lat,bus.lon],bus.id,bus.timestamp||String(bus.lat)+String(bus.lon),bus.shape);p.setIcon(icon(bus.id===active?.id,bus.bearing)).bindPopup('801 → '+escapeHTML(bus.destination))}if(!fitDone&&buses.length){map.fitBounds(L.latLngBounds(buses.map(b=>[b.lat,b.lon])).pad(.45),{maxZoom:11});fitDone=true}
-controls.querySelectorAll('.busChoice').forEach(x=>x.remove());for(const b of buses){const btn=document.createElement('button');btn.className='busChoice'+(selected===b.id?' active':'');btn.textContent='801 → '+b.destination+' · '+b.id.slice(-4);btn.onclick=()=>chooseBus(b.id);controls.insertBefore(btn,document.getElementById('reload'))}document.getElementById('auto').classList.toggle('active',selected==='auto');document.getElementById('destination').textContent=active?.destination||'Ingen aktiv tur';const progress=active?liveStopLists(active):{next:[],passed:[]};const next=progress.next,passed=progress.passed;const stopBox=document.getElementById('stops'),oldScroll=stopBox.scrollTop;
-const oldTrip=stopBox.dataset.trip,oldNext=stopBox.dataset.next;
-const newTrip=active?active.id+'|'+active.tripId:'',newNext=String(next[0]?.sequence||'');
-const needsFocus=!userBrowsingStops&&(oldTrip!==newTrip||oldNext!==newNext);
-stopBox.classList.toggle('hasStops',Boolean(active&&(passed.length+next.length)));
-// IMPORTANT: show every scheduled stop from the first one, not just the last three.
-const entireTrip=[...passed.map(s=>({s,cls:'passed'})),...next.map((s,i)=>({s,cls:i===0?'next':''}))];
-stopBox.innerHTML=active&&entireTrip.length?entireTrip.map(({s,cls})=>`<div class="stop ${cls}"><span class="dot"></span><span class="stopName">${escapeHTML(s.name)}${cls==='next'?'<div class="when">Nästa hållplats</div>':''}</span><span class="time">${forecastHTML(s)}${cls==='next'?`<div class="when">${escapeHTML(etaText(s.scheduled))}</div>`:''}</span></div>`).join(''):'<div class="stop"><span class="stopName">Inga aktuella hållplatsuppgifter</span></div>';
-stopBox.dataset.trip=newTrip;stopBox.dataset.next=newNext;
-document.getElementById('stopCount').textContent=entireTrip.length+' hållplatser';
-if(needsFocus){const el=stopBox.querySelector('.stop.next');if(el)stopBox.scrollTop=Math.max(0,el.offsetTop-stopBox.offsetTop-stopBox.clientHeight*.36);else stopBox.scrollTop=0}
-else stopBox.scrollTop=oldScroll;
-const audioPanel=document.getElementById('audioPanel');audioPanel.hidden=selected==='auto'||!active;
-if(selected!=='auto'&&active){if(soundEnabled){soundKit.adjust(active);noteNextStop(active,progress)} }
-
+function redraw(){const found=new Set(buses.map(b=>b.id));for(const [id,p] of pins)if(!found.has(id)){map.removeLayer(p);pins.delete(id);const job=animationJobs.get(id);if(job)cancelAnimationFrame(job.raf);animationJobs.delete(id);gpsHistory.delete(id)}const active=buses.find(x=>x.id===selected)||buses[0];for(const bus of buses){let p=pins.get(bus.id);if(!p){p=L.marker([bus.lat,bus.lon],{icon:icon(bus.id===active?.id,bus.bearing)}).addTo(map).on('click',()=>{selected=bus.id;redraw()});pins.set(bus.id,p)}animateMarker(p,[bus.lat,bus.lon],bus.id,bus.timestamp||String(bus.lat)+String(bus.lon),bus.shape);p.setIcon(icon(bus.id===active?.id,bus.bearing)).bindPopup('801 → '+escapeHTML(bus.destination))}if(!fitDone&&buses.length){map.fitBounds(L.latLngBounds(buses.map(b=>[b.lat,b.lon])).pad(.45),{maxZoom:11});fitDone=true}
+controls.querySelectorAll('.busChoice').forEach(x=>x.remove());for(const b of buses){const btn=document.createElement('button');btn.className='busChoice'+(selected===b.id?' active':'');btn.textContent='801 → '+b.destination+' · '+b.id.slice(-4);btn.onclick=()=>{selected=b.id;redraw()};controls.insertBefore(btn,document.getElementById('reload'))}document.getElementById('auto').classList.toggle('active',selected==='auto');document.getElementById('destination').textContent=active?.destination||'Ingen aktiv tur';const progress=active?liveStopLists(active):{next:[],passed:[]};const next=progress.next,passed=progress.passed;document.getElementById('stops').classList.toggle('hasStops',Boolean(active&&next.length));document.getElementById('stops').innerHTML=active&&next.length?[...passed.slice(-3).map(s=>({s,cls:'passed'})),...next.slice(0,14).map((s,i)=>({s,cls:i===0?'next':''}))].map(({s,cls},i)=>`<div class="stop ${cls}"><span class="dot"></span><span class="stopName">${escapeHTML(s.name)}${cls==='next'?'<div class="when">Nästa hållplats</div>':''}</span><span class="time">${forecastHTML(s)}${cls==='next'?`<div class="when">${escapeHTML(etaText(s.scheduled))}</div>`:''}</span></div>`).join(''):'<div class="stop"><span class="stopName">Inga aktuella hållplatsuppgifter</span></div>';
 stopLayer.clearLayers();if(trailLine){map.removeLayer(trailLine);trailLine=null}if(remainingLine){map.removeLayer(remainingLine);remainingLine=null}if(!active)document.getElementById('telemetry').classList.remove('visible');if(active){const planned=active.shape||[];
  // An explicitly clicked vehicle only; the default auto mode shows no trail.
  if(selected!=='auto' && planned.length>1){
@@ -281,8 +151,6 @@ stopLayer.clearLayers();if(trailLine){map.removeLayer(trailLine);trailLine=null}
  document.getElementById('speedDetail').textContent=kph===null||kph===undefined?'Väntar på två GPS-positioner':'GPS-beräknat medelvärde · uppskattat';
  document.getElementById('gaugeArc').setAttribute('stroke-dasharray',`${Math.round(151*Math.max(0,Math.min(1,(kph||0)/100)))} 151`);
  document.getElementById('displayFooter').textContent=`Tidtabell · GPS ${active.timestamp?new Date(active.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'okänd'} · ${selected!=='auto' ? 'Planerad rutt till GPS-position' : 'Välj en buss för att se rutten'}`;}}
-async function update(){if(loading)return;loading=true;try{const r=await fetch('/api/vehicles',{cache:'no-store'});if(!r.ok)throw Error('Server HTTP '+r.status);const d=await r.json();if(!Array.isArray(d.buses))throw Error(d.error||'Ogiltiga data');
-if(d.loading && !d.updated){status.innerHTML=`<b>Hämtar UL:s tidtabell …</b><div>Servern förbereder trafiken. Du behöver inte hålla sidan öppen; förberedelsen fortsätter på servern medan den körs.</div>${d.error?`<div>${escapeHTML(d.error)}</div>`:''}`;return;}
-buses=d.buses;for(const b of buses)speedFor(b);const fresh=buses.filter(b=>b.timestamp&&Date.now()-Date.parse(b.timestamp)<120000).length;const when=d.updated?new Date(d.updated).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'–';status.innerHTML=`<b>${buses.length} fordon på linje 801${d.stale?' · Äldre data':''}</b><div>${fresh} med GPS från senaste 2 minuterna · Hämtad ${escapeHTML(when)} (Sverige)</div>${d.error?`<div>Senaste hämtningen misslyckades: ${escapeHTML(d.error)}</div>`:''}${!buses.length?'<div>Ingen aktiv tur · Ingen buss hittades i UL:s realtidsflöde.</div>':''}`;redraw()}catch(e){status.innerHTML=`<b>Realtidsanslutningen bröts</b><div>${escapeHTML(e.message)}</div><div>Senaste positioner visas men kan vara inaktuella.</div>`}finally{loading=false}}
-function scheduleRefresh(){clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!document.hidden)update()},Number(frequency.value))}frequency.onchange=()=>{scheduleRefresh();update()};document.getElementById('auto').onclick=()=>{selected='auto';audioStop();redraw()};document.getElementById('reload').onclick=update;document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});function clock(){document.getElementById('clock').textContent=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())+' · Sverige'}clock();setInterval(clock,1000);scheduleRefresh();update();
+async function update(){if(loading)return;loading=true;try{const r=await fetch('/api/vehicles',{cache:'no-store'});if(!r.ok)throw Error('Server HTTP '+r.status);const d=await r.json();if(!Array.isArray(d.buses))throw Error(d.error||'Ungültige Daten');buses=d.buses;for(const b of buses)speedFor(b);const fresh=buses.filter(b=>b.timestamp&&Date.now()-Date.parse(b.timestamp)<120000).length;const when=d.updated?new Date(d.updated).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'–';status.innerHTML=`<b>${buses.length} fordon på linje 801</b><div>${fresh} med GPS från senaste 2 minuterna · Hämtad ${escapeHTML(when)} (Sverige)</div>${!buses.length?'<div>Ingen aktiv tur · Ingen buss hittades i UL:s realtidsflöde.</div>':''}`;redraw()}catch(e){status.innerHTML=`<b>Realtidsanslutningen bröts</b><div>${escapeHTML(e.message)}</div><div>Senaste positioner visas men kan vara inaktuella.</div>`}finally{loading=false}}
+function scheduleRefresh(){clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!document.hidden)update()},Number(frequency.value))}frequency.onchange=()=>{scheduleRefresh();update()};document.getElementById('auto').onclick=()=>{selected='auto';redraw()};document.getElementById('reload').onclick=update;document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});function clock(){document.getElementById('clock').textContent=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())+' · Sverige'}clock();setInterval(clock,1000);scheduleRefresh();update();
 </script></body></html>
