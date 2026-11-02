@@ -1,6 +1,11 @@
 <!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UL 801 · Live</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>
 :root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#eaf2f0;background:#101b21}*{box-sizing:border-box}body{margin:0}header{padding:15px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #31414a;gap:14px}h1{font-size:19px;margin:0}small,.muted{color:#adbec4}main{display:grid;grid-template-columns:1.35fr 1fr;min-height:calc(100dvh - 73px)}.mapPane{position:relative;min-height:550px;align-self:stretch;overflow:hidden}#map{position:absolute;inset:0;height:100%;min-height:0;width:100%;background:#263743}.panel{padding:20px;display:flex;flex-direction:column;gap:13px;min-width:0}.status{background:#1a2b33;border:1px solid #354750;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6}.status b{color:#e5fcab}.controls{display:flex;gap:7px;flex-wrap:wrap}button,select{background:#223740;border:1px solid #53636a;color:white;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}button.active{background:#e5ed33;color:#142128;border-color:#e5ed33}.display{background:#f5e630;border-radius:13px;color:#19252a;overflow:hidden;box-shadow:0 14px 28px #0003}.top{display:flex;gap:14px;padding:18px;align-items:center}.line{font-size:41px;font-weight:900;background:#142931;color:#f6e838;padding:6px 12px;border-radius:7px}.destination{font-size:22px;line-height:1.15;font-weight:850}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#e7da26;padding:10px 16px;font-weight:750;font-size:13px}.stopList{max-height:47vh;overflow:auto;position:relative}.stopList.hasStops .stop:before{content:"";position:absolute;left:21px;top:-1px;bottom:-1px;width:2px;background:#26383b;z-index:0;pointer-events:none}.stopList.hasStops .stop:first-child:before{top:50%}.stopList.hasStops .stop:last-child:before{bottom:50%}.stop{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 17px;border-top:1px solid #c5bd33;font-size:14px;position:relative;isolation:isolate;min-height:53px}.stop.next{background:#fff27e}.stop.passed{opacity:.64}.dot{height:12px;width:12px;border:3px solid #182b30;border-radius:50%;position:relative;background:#f5e630;z-index:2;margin-left:-1px}.stop.next .dot{background:#fff27e}.stop.passed .dot{background:#a9a52f}.stopName{font-weight:720}.time{text-align:right;font-variant-numeric:tabular-nums;font-weight:850}.when{font-size:11px;font-weight:500;color:#44504f}.display footer{padding:11px 16px;background:#e5d92a;font-size:11px}.note{font-size:12px;color:#aec0c7;line-height:1.55}.busPin{background:#f7e738;border:3px solid #142a35;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;color:#142a35;font-size:12px;font-weight:900;box-shadow:0 2px 8px #0007}.pinSelected .busPin{outline:3px solid white}.stopPin{height:10px;width:10px;background:#f5e630;border:2px solid #284c57;border-radius:50%;box-shadow:0 0 0 2px #fff7}.stopPin.passed{background:#7d969d}.stopPin.next{width:15px;height:15px;background:white;border:3px solid #dfbc00}.headActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.headActions select{font-size:12px;padding:7px}.stamp{white-space:nowrap}.telemetry{display:none;background:#142a34;border:1px solid #43606a;border-radius:12px;padding:15px 18px;align-items:center;justify-content:space-between;gap:18px}.telemetry.visible{display:flex}.speedNum{font-size:36px;font-weight:850;font-variant-numeric:tabular-nums;color:#f4df25}.speedUnit{font-size:12px;color:#bdced3}.gauge{width:116px;height:60px;position:relative}.gauge svg{width:116px;height:68px}.gaugeValue{font-weight:800;color:#f4df25}.oldTime{color:#727541;text-decoration:line-through;margin-right:8px;font-size:12px}.newTime{color:#162b2d;font-size:17px}.miniBus{filter:drop-shadow(0 3px 4px #14233388);transform:translateZ(0)}.leaflet-marker-icon{will-change:transform}@media(max-width:900px){main{grid-template-columns:1fr;display:flex;flex-direction:column}.mapPane{height:42dvh;min-height:270px;max-height:450px}#map{min-height:0}.panel{padding:12px;gap:11px}.stopList{max-height:48dvh}.destination{font-size:20px}header{padding:12px;align-items:flex-start}.headActions{justify-content:flex-end}.telemetry{padding:12px 15px}}@media(max-width:530px){header{gap:8px;flex-wrap:wrap}header h1{font-size:16px}.headActions{width:100%;justify-content:space-between}.stamp{font-size:11px}.mapPane{height:37dvh;min-height:240px}#map{min-height:0}.panel{padding:10px}.top{padding:13px}.line{font-size:32px}.destination{font-size:18px}.stop{grid-template-columns:18px minmax(0,1fr) auto;padding:12px 14px;font-size:13px;gap:8px}.stopList.hasStops .stop:before{left:18px}.stopName{overflow-wrap:anywhere}.time{max-width:126px}.controls button,.headActions select{min-height:40px}.telemetry .speedNum{font-size:29px}.gauge,.gauge svg{width:96px}.note{font-size:11px}}
-</style></head><body><header><div><h1>UL <span style="color:#f5e630">801</span> · Trafiköversikt</h1><small>Uppsala Centralstation ↔ Arlanda flygplats</small></div><div class="headActions"><select id="frequency" aria-label="Uppdateringsintervall"><option value="20000">Standard · 20 s</option><option value="5000">Visning · 5 s</option><option value="10000">Snabb · 10 s</option><option value="45000">Sparläge · 45 s</option></select><small id="clock" class="stamp"></small></div></header><main><section class="mapPane"><div id="map"></div></section><section class="panel"><div class="status" id="status">Kontrollerar anslutningen …</div><div class="controls" id="controls"><button id="auto" class="active">Automatiskt val</button><button id="reload">Uppdatera nu</button></div><div class="display"><div class="top"><div class="line">801</div><div><div style="font-size:12px;font-weight:800">DESTINATION</div><div class="destination" id="destination">Ingen tur vald</div></div></div><div class="bar"><span>Hela resan · nästa hållplats markerad</span><span>Tidtabell / Prognos</span></div><div id="stops" class="stopList"><div class="stop">Inga avgångsdata ännu</div></div><footer id="displayFooter">Tidtabell · Trafikprognoser om tillgängliga · UL-inspirerad design</footer></div><div id="telemetry" class="telemetry"><div><div style="font-size:12px;color:#b8cbd1">UPPSKATTAD HASTIGHET</div><div><span id="speed" class="speedNum">–</span><span class="speedUnit"> km/h</span></div><div style="font-size:11px;color:#b8cbd1" id="speedDetail">Beräknat från GPS-positioner</div></div><div class="gauge"><svg viewBox="0 0 120 74"><path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#526b75" stroke-width="10" stroke-linecap="round"/><path id="gaugeArc" d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#f4df25" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 151"/></svg></div></div><div class="note">GPS-positioner från Trafiklab. Blått visar körd del och grått återstående del av planerad linjesträckning vid vald buss. Körningen mellan GPS-rapporter är en uppskattning, inte uppmätt realtidsposition. Prognostider visas endast när Trafiklab skickar TripUpdates. Hastighet är beräknad från GPS.</div></section></main>
+
+<style>
+.vehicleCard{display:flex;gap:14px;align-items:center;border:1px solid #46616b;border-radius:12px;background:#182d36;padding:12px;min-height:105px}.vehicleCard[hidden]{display:none}.vehiclePhoto{width:142px;height:94px;flex:none;border-radius:9px;background:#2c434c;display:grid;place-items:center;overflow:hidden}.vehiclePhoto img{width:100%;height:100%;object-fit:cover}.vehiclePhoto svg{width:90%;height:85%}.vehicleInfo{min-width:0}.vehicleInfo strong{display:block;font-size:15px}.vehicleInfo div{font-size:12px;color:#b6ccd1;margin-top:5px}.vehicleTag{display:inline-block;padding:3px 6px;background:#344f5b;border-radius:5px;font-size:10px;color:#e0f3f3;margin-top:6px}.followRow{display:flex;gap:8px;align-items:center}.followRow button{font-size:12px;padding:7px 10px}.statusHint{font-size:11px;color:#bed0d7} .mapOverlay{position:absolute;bottom:12px;left:12px;z-index:401;pointer-events:none;background:#132830e9;color:#eaf2f0;border-radius:8px;padding:7px 10px;font-size:11px} 
+@media(max-width:900px){.mapPane{height:72dvh;min-height:480px;max-height:none}.vehiclePhoto{width:115px;height:80px}}
+@media(max-width:530px){.mapPane{height:72dvh;min-height:430px;max-height:none}.panel{padding:12px}.vehicleCard{gap:10px}.vehiclePhoto{width:105px;height:78px}}
+</style></head><body><header><div><h1>UL <span style="color:#f5e630">801</span> · Trafiköversikt</h1><small>Uppsala Centralstation ↔ Arlanda flygplats</small></div><div class="headActions"><select id="frequency" aria-label="Uppdateringsintervall"><option value="5000">Live · 5 s</option><option value="20000">Standard · 20 s</option><option value="10000">Snabb · 10 s</option><option value="45000">Sparläge · 45 s</option></select><small id="clock" class="stamp"></small></div></header><main><section class="mapPane"><div id="map"></div><div class="mapOverlay">GPS-data · Rörelser mellan rapporter simuleras</div></section><section class="panel"><div class="status" id="status">Kontrollerar anslutningen …</div><div class="controls" id="controls"><button id="auto" class="active">Hela linjen</button><button id="follow" style="display:none">Följ buss: av</button><button id="reload">Uppdatera nu</button></div><div class="display"><div class="top"><div class="line">801</div><div><div style="font-size:12px;font-weight:800">DESTINATION</div><div class="destination" id="destination">Ingen tur vald</div></div></div><div class="bar"><span>Hela resan · nästa hållplats markerad</span><span>Tidtabell / Prognos</span></div><div id="stops" class="stopList"><div class="stop">Inga avgångsdata ännu</div></div><footer id="displayFooter">Tidtabell · Trafikprognoser om tillgängliga · UL-inspirerad design</footer></div><div id="vehicleCard" class="vehicleCard" hidden></div><div id="telemetry" class="telemetry"><div><div style="font-size:12px;color:#b8cbd1">UPPSKATTAD HASTIGHET</div><div><span id="speed" class="speedNum">–</span><span class="speedUnit"> km/h</span></div><div style="font-size:11px;color:#b8cbd1" id="speedDetail">Beräknat från GPS-positioner</div></div><div class="gauge"><svg viewBox="0 0 120 74"><path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#526b75" stroke-width="10" stroke-linecap="round"/><path id="gaugeArc" d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#f4df25" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 151"/></svg></div></div><div class="note">GPS-positioner från Trafiklab. Blått visar körd del och grått återstående del av planerad linjesträckning vid vald buss. Körningen mellan GPS-rapporter är en uppskattning, inte uppmätt realtidsposition. Prognostider visas endast när Trafiklab skickar TripUpdates. Hastighet är beräknad från GPS.</div></section></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 // Keep a modest ring of recently visible map tiles during map movement.
 // OpenStreetMap prohibits bulk prefetching of unseen areas: use the ordinary browser HTTP cache.
@@ -22,7 +27,7 @@ window.addEventListener('pageshow',resizeMap);
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(resizeMap).observe(document.getElementById('map'));
 
 const pins=new Map();const animationJobs=new Map(),gpsHistory=new Map();let lastTimelineTrip='',selected='auto',buses=[],trailLine=null,remainingLine=null,stopLayer=L.layerGroup().addTo(map),fitDone=false,refreshTimer=null,loading=false;
-const status=document.getElementById('status'),controls=document.getElementById('controls'),frequency=document.getElementById('frequency');
+let followBus=false;const lastGps=new Map();const terminalGhosts=L.layerGroup().addTo(map);const status=document.getElementById('status'),controls=document.getElementById('controls'),frequency=document.getElementById('frequency');
 function escapeHTML(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function icon(active,bearing){
  // F: minimal, professional yellow bus front, fixed orientation for legibility.
@@ -32,64 +37,56 @@ function icon(active,bearing){
 function nearestShapeIndex(shape,lat,lon){let best=0,smallest=Infinity;for(let i=0;i<shape.length;i++){let p=shape[i],d=(p[0]-lat)**2+((p[1]-lon)*0.53)**2;if(d<smallest){smallest=d;best=i}}return best}
 // Movement follows the received GPS fixes. Never invent a departure while a bus is stationary.
 // A stopped bus remains stopped until Trafiklab reports a meaningful new location.
+function distanceOnRoute(shape,point){
+ if(!shape||shape.length<2)return null;
+ const ix=nearestShapeIndex(shape,point[0],point[1]);
+ if(L.latLng(shape[ix]).distanceTo(point)>170)return null;
+ const cum=[0];for(let i=1;i<shape.length;i++)cum.push(cum[i-1]+L.latLng(shape[i-1]).distanceTo(shape[i]));
+ return {ix,d:cum[ix],cum,total:cum.at(-1)};
+}
+function routePosition(path,dist,cum){let i=1;while(i<cum.length-1&&cum[i]<dist)i++;const seg=cum[i]-cum[i-1],f=seg?(dist-cum[i-1])/seg:0;return [path[i-1][0]+(path[i][0]-path[i-1][0])*f,path[i-1][1]+(path[i][1]-path[i-1][1])*f]}
+// One persistent animation loop per bus, driven by actual report timestamps.
+// Prediction is deliberately bounded to 10 seconds and stopped when stationary or stale.
 function animateMarker(marker,to,key,stamp,shape,bus){
- const end=L.latLng(to[0],to[1]), old=animationJobs.get(key);
+ const sample=Date.parse(bus?.timestamp||'');const old=animationJobs.get(key);
  if(old?.stamp===stamp)return;
  if(old?.raf)cancelAnimationFrame(old.raf);
- const from=marker.getLatLng(),meters=from.distanceTo(end);
- const age=bus?.timestamp?Date.now()-Date.parse(bus.timestamp):Infinity;
- if(!Number.isFinite(meters)||meters>1250||age>130000){marker.setLatLng(end);animationJobs.set(key,{stamp,raf:0});return}
- // Small GPS fluctuations are not movement: a bus dwelling at a stop must stay still.
- if(meters<15){animationJobs.set(key,{stamp,raf:0});return}
- let points=[from,end];
- if(Array.isArray(shape)&&shape.length>2){
-  const a=nearestShapeIndex(shape,from.lat,from.lng),b=nearestShapeIndex(shape,end.lat,end.lng);
-  if(b>a&&b-a<600&&from.distanceTo(shape[a])<130&&end.distanceTo(shape[b])<130)
-   points=[from,...shape.slice(a+1,b+1).map(q=>L.latLng(q[0],q[1])),end];
- }
- const distance=[0];for(let i=1;i<points.length;i++)distance.push(distance.at(-1)+points[i-1].distanceTo(points[i]));
- const total=distance.at(-1);
- // Use a fairly continuous, near-constant velocity over each reported GPS interval.
- // Do not animate an obviously implausible route detour.
- if(total>meters*2.3+200){points=[from,end];distance.length=0;distance.push(0,meters)}
- const pathLen=distance.at(-1),duration=Math.max(2000,Math.min(19000,Number(frequency.value)*.88));
- const state={stamp,raf:0};animationJobs.set(key,state);const start=performance.now();
+ const now=performance.now(), target=L.latLng(to),from=marker.getLatLng();
+ const previous=lastGps.get(key);let speed=0;
+ if(previous && Number.isFinite(sample) && sample>previous.t){const dt=(sample-previous.t)/1000;const meters=L.latLng(previous.lat,previous.lon).distanceTo(target);if(dt>=2&&dt<=180 && meters<2000)speed=Math.min(25,meters/dt);}
+ // GPS unchanged: stay still, including at stops. Jitter is not departure.
+ if(previous && L.latLng(previous.lat,previous.lon).distanceTo(target)<17)speed=0;
+ if(Number.isFinite(sample)&&(!previous||sample>=previous.t))lastGps.set(key,{lat:bus.lat,lon:bus.lon,t:sample});
+ const age=Number.isFinite(sample)?Date.now()-sample:Infinity;
+ if(age>90000)speed=0;
+ const path=routeFor(bus);const routeData=distanceOnRoute(path,[bus.lat,bus.lon]);
+ const candidate=routeData&&speed>0?routePosition(path,Math.min(routeData.total,routeData.d+speed*8),routeData.cum):null;
+ const start=from;const correction=from.distanceTo(target);const maxCorrection=Math.min(600,Math.max(22,speed*9));
+ if(correction>1200){marker.setLatLng(target);animationJobs.set(key,{stamp,raf:0});return}
+ const state={stamp,raf:0};animationJobs.set(key,state);
  function tick(t){if(animationJobs.get(key)!==state||!map.hasLayer(marker))return;
-  const phase=Math.min(1,(t-start)/duration);
-  // Short 8% acceleration/deceleration, otherwise linear. When the live GPS says
-  // the bus has stopped, the next fix won't move it again until it really moves.
-  const ease=x=>x<.1?(5*x*x)/.9:x>.9?(x-5*(1-x)*(1-x))/.9:(x-.05)/.9;
-  const target=Math.min(pathLen,Math.max(0,ease(phase)*pathLen));
-  let i=1;while(i<distance.length-1&&distance[i]<target)i++;
-  const len=distance[i]-distance[i-1],u=len?Math.max(0,Math.min(1,(target-distance[i-1])/len)):1;
-  const p=points[i-1],q=points[i];marker.setLatLng([p.lat+(q.lat-p.lat)*u,p.lng+(q.lng-p.lng)*u]);
-  if(phase<1)state.raf=requestAnimationFrame(tick);
+  const secs=(t-now)/1000;
+  const settle=Math.min(1,secs/7);let cur=[start.lat+(target.lat-start.lat)*settle,start.lng+(target.lng-start.lng)*settle];
+  // Advance only on real GTFS road shape. Do not let predictions bypass the upcoming stop.
+  if(candidate&&secs>1){const p=Math.min(1,(secs-1)/9),pred=L.latLng(candidate);const baseline=L.latLng(cur);const dir=pred.distanceTo(baseline);if(dir<maxCorrection+180){const blend=p*.82;cur=[cur[0]+(candidate[0]-cur[0])*blend,cur[1]+(candidate[1]-cur[1])*blend]}}
+  marker.setLatLng(cur);
+  if(followBus&&selected===key&&secs<11&&Math.round(t/200)!==Math.round((t-16)/200))map.panTo(marker.getLatLng(),{animate:false});
+  if(secs<11)state.raf=requestAnimationFrame(tick);
  }
  state.raf=requestAnimationFrame(tick);
 }
-// Find a reliable planned route, with a clear visual fallback when GTFS shape is absent.
+// Only actual GTFS road geometry is eligible for a displayed route.
+// Never replace roads with straight lines between stops.
 function routeFor(bus){
- const stops=(bus.allStops?.length?bus.allStops:[...(bus.passedStops||[]),...(bus.nextStops||[])]).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));
- const fallback=stops.map(x=>[x.lat,x.lon]);
  const shape=Array.isArray(bus.shape)?bus.shape.filter(p=>Array.isArray(p)&&p.length>=2&&Number.isFinite(p[0])&&Number.isFinite(p[1])):[];
- if(shape.length>2 && fallback.length>=2){
-  const first=L.latLng(shape[0]),last=L.latLng(shape.at(-1));
-  const a=L.latLng(fallback[0]),z=L.latLng(fallback.at(-1));
-  // Reject a truncated/unrelated shape, rather than drawing a misleading road path.
-  if(first.distanceTo(a)<1500&&last.distanceTo(z)<1500)return {path:shape,approx:false};
- } else if(shape.length>2)return {path:shape,approx:false};
- return {path:fallback,approx:true};
+ return shape.length>=2?shape:[];
 }
 function splitRoute(bus){
- const {path,approx}=routeFor(bus);
- if(path.length<2)return {traveled:[],remaining:[],approx};
+ const path=routeFor(bus);
+ if(path.length<2)return {traveled:[],remaining:[]};
  const ix=nearestShapeIndex(path,bus.lat,bus.lon);
- // For the stop-to-stop fallback, use GTFS nextStopIndex so blue/gray don't
- // jump to an incorrect stop on a route that crosses itself.
- let split=ix;
- if(approx&&Number.isInteger(bus.nextStopIndex))split=Math.max(0,Math.min(path.length-1,bus.nextStopIndex-1));
  const pos=[bus.lat,bus.lon];
- return {traveled:[...path.slice(0,split+1),pos],remaining:[pos,...path.slice(split+1)],approx};
+ return {traveled:[...path.slice(0,ix+1),pos],remaining:[pos,...path.slice(ix+1)]};
 }
 function speedFor(bus){
  if(!bus?.timestamp)return null;
@@ -119,48 +116,30 @@ function forecastHTML(s){
 // the measured position and the published route geometry support it.
 const stopProgress=new Map();
 function liveStopLists(bus){
- const originalPassed=bus.passedStops||[], originalNext=bus.nextStops||[];
- const all=[...originalPassed,...originalNext];
- if(!all.length)return {passed:originalPassed,next:originalNext};
- const key=String(bus.id)+'|'+String(bus.tripId||'');
- const previous=stopProgress.get(key);
- const stamp=Date.parse(bus.timestamp||'');
- let idx=originalPassed.length;
- const shape=bus.shape;
- if(Array.isArray(shape)&&shape.length>2&&Number.isFinite(bus.lat)&&Number.isFinite(bus.lon)){
-   const vehicleAt=nearestShapeIndex(shape,bus.lat,bus.lon);
-   const vehicleDist=L.latLng(shape[vehicleAt]).distanceTo([bus.lat,bus.lon]);
-   if(vehicleDist<170){
-     let lastAt=-1,valid=true;
-     const positions=[];
-     for(const stop of all){
-       if(!Number.isFinite(stop.lat)||!Number.isFinite(stop.lon)){valid=false;break}
-       const at=nearestShapeIndex(shape,stop.lat,stop.lon);
-       // A stop distant from the route (or a route that doubles back) is ambiguous.
-       if(L.latLng(shape[at]).distanceTo([stop.lat,stop.lon])>200 || at<lastAt-3){valid=false;break}
-       positions.push(at);lastAt=at;
-     }
-     if(valid){
-       let projected=0;
-       for(let i=0;i<all.length;i++){
-         // Don't advance while the bus is still at the stop. Advance only after
-         // passing the point on the published route, with a GPS tolerance.
-         if(positions[i]<vehicleAt-2 && L.latLng([bus.lat,bus.lon]).distanceTo([all[i].lat,all[i].lon])>80)projected=i+1;
-       }
-       idx=Math.max(idx,projected);
-     }
-   }
- }
- // Never jump backwards for the same trip on a subsequent GPS report.
- if(previous&&Number.isFinite(stamp)&&stamp>=previous.stamp)idx=Math.max(idx,previous.index);
- // If a cached response arrives repeatedly, preserve the existing state.
- if(!previous||!Number.isFinite(stamp)||stamp>=previous.stamp)stopProgress.set(key,{index:idx,stamp:Number.isFinite(stamp)?stamp:Date.now()});
- else idx=previous.index;
- idx=Math.max(0,Math.min(idx,all.length));
- return {passed:all.slice(0,idx),next:all.slice(idx)};
+ const passed=Array.isArray(bus.passedStops)?bus.passedStops:[],next=Array.isArray(bus.nextStops)?bus.nextStops:[];
+ const all=[...passed,...next],key=String(bus.id)+'|'+String(bus.tripId||'');
+ if(!all.length)return {passed,next};
+ const stamp=Date.parse(bus.timestamp||'');const previous=stopProgress.get(key);
+ let index=passed.length;
+ // Published trip progress is more reliable than global nearest-shape projection,
+ // especially at airport road loops. GPS alone must never skip stops.
+ if(previous&&Number.isFinite(stamp)&&stamp>=previous.stamp){index=Math.max(previous.index,Math.min(index,previous.index+1));}
+ if(previous&&Number.isFinite(stamp)&&stamp<previous.stamp)index=previous.index;
+ if(!previous||!Number.isFinite(stamp)||stamp>=previous.stamp)stopProgress.set(key,{index,stamp:Number.isFinite(stamp)?stamp:Date.now()});
+ return {passed:all.slice(0,index),next:all.slice(index)};
 }
-function redraw(){const found=new Set(buses.map(b=>b.id));for(const [id,p] of pins)if(!found.has(id)){map.removeLayer(p);pins.delete(id);const job=animationJobs.get(id);if(job)cancelAnimationFrame(job.raf);animationJobs.delete(id);gpsHistory.delete(id)}const active=buses.find(x=>x.id===selected)||buses[0];for(const bus of buses){let p=pins.get(bus.id);if(!p){p=L.marker([bus.lat,bus.lon],{icon:icon(bus.id===active?.id,bus.bearing)}).addTo(map).on('click',()=>{selected=bus.id;redraw()});pins.set(bus.id,p)}animateMarker(p,[bus.lat,bus.lon],bus.id,bus.timestamp||String(bus.lat)+String(bus.lon),routeFor(bus).approx?[]:bus.shape,bus);p.setIcon(icon(bus.id===active?.id,bus.bearing)).bindPopup('801 → '+escapeHTML(bus.destination))}if(!fitDone&&buses.length){map.fitBounds(L.latLngBounds(buses.map(b=>[b.lat,b.lon])).pad(.45),{maxZoom:11});fitDone=true}
-controls.querySelectorAll('.busChoice').forEach(x=>x.remove());for(const b of buses){const btn=document.createElement('button');btn.className='busChoice'+(selected===b.id?' active':'');btn.textContent='801 → '+b.destination+' · '+b.id.slice(-4);btn.onclick=()=>{selected=b.id;redraw()};controls.insertBefore(btn,document.getElementById('reload'))}document.getElementById('auto').classList.toggle('active',selected==='auto');document.getElementById('destination').textContent=active?.destination||'Ingen aktiv tur';const progress=active?liveStopLists(active):{next:[],passed:[]};const next=progress.next,passed=progress.passed;document.getElementById('stops').classList.toggle('hasStops',Boolean(active&&(next.length||passed.length)));document.getElementById('stops').innerHTML=active&&(next.length||passed.length)?[...passed.map(s=>({s,cls:'passed'})),...next.map((s,i)=>({s,cls:i===0?'next':''}))].map(({s,cls},i)=>`<div class="stop ${cls}"><span class="dot"></span><span class="stopName">${escapeHTML(s.name)}${cls==='next'?'<div class="when">Nästa hållplats</div>':''}</span><span class="time">${forecastHTML(s)}${cls==='next'?`<div class="when">${escapeHTML(etaText(s.scheduled))}</div>`:''}</span></div>`).join(''):'<div class="stop"><span class="stopName">Inga aktuella hållplatsuppgifter</span></div>';
+function wholeLineBounds(){const points=buses.flatMap(b=>routeFor(b));if(points.length>1)map.fitBounds(L.latLngBounds(points),{padding:[24,24],maxZoom:11});else map.fitBounds([[59.63,17.86],[59.87,17.60]],{padding:[22,22]});}
+function wholeLine(){
+ selected='auto';followBus=false;document.getElementById('follow').style.display='none';
+ wholeLineBounds();redraw();
+}
+function chooseBus(id){selected=id;followBus=false;const bus=buses.find(b=>b.id===id);if(bus){map.flyTo([bus.lat,bus.lon],Math.max(map.getZoom(),11),{animate:true,duration:0.75});}redraw();}
+function vehicleCard(bus){const card=document.getElementById('vehicleCard');card.hidden=!bus;if(!bus)return;
+ const photo=bus.photoUrl&&/^https:\/\//.test(bus.photoUrl)?`<img alt="Verifierat fordonsfoto" src="${escapeHTML(bus.photoUrl)}">`: `<svg viewBox="0 0 150 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="12" y="18" width="126" height="50" rx="12" fill="#f5de25"/><rect x="24" y="24" width="102" height="25" rx="5" fill="#203843"/><circle cx="39" cy="68" r="9" fill="#0c1f28"/><circle cx="111" cy="68" r="9" fill="#0c1f28"/><text x="75" y="60" text-anchor="middle" font-size="12" font-weight="bold" fill="#13252d">801</text></svg>`;
+ card.innerHTML=`<div class="vehiclePhoto">${photo}</div><div class="vehicleInfo"><strong>Fordon ${escapeHTML(String(bus.id).slice(-6))}</strong><div>801 → ${escapeHTML(bus.destination)}</div><div>GPS ${escapeHTML(bus.timestamp?new Date(bus.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'–')}</div><span class="vehicleTag">${bus.photoUrl?'Fordonsfoto':'Fordonsillustration · foto ännu ej verifierat'}</span></div>`;
+}
+function redraw(){const found=new Set(buses.map(b=>b.id));for(const [id,p] of pins)if(!found.has(id)){map.removeLayer(p);pins.delete(id);const job=animationJobs.get(id);if(job)cancelAnimationFrame(job.raf);animationJobs.delete(id);gpsHistory.delete(id);lastGps.delete(id)}const active=selected==='auto'?null:buses.find(x=>x.id===selected)||null;for(const bus of buses){let p=pins.get(bus.id);if(!p){p=L.marker([bus.lat,bus.lon],{icon:icon(bus.id===active?.id,bus.bearing)}).addTo(map).on('click',()=>chooseBus(bus.id));pins.set(bus.id,p)}animateMarker(p,[bus.lat,bus.lon],bus.id,bus.timestamp||String(bus.lat)+String(bus.lon),routeFor(bus),bus);p.setIcon(icon(bus.id===active?.id,bus.bearing))}if(!fitDone&&buses.length){wholeLineBounds();fitDone=true}
+controls.querySelectorAll('.busChoice').forEach(x=>x.remove());for(const b of buses){const btn=document.createElement('button');btn.className='busChoice'+(selected===b.id?' active':'');btn.textContent='801 → '+b.destination+' · '+b.id.slice(-4);btn.onclick=()=>chooseBus(b.id);controls.insertBefore(btn,document.getElementById('reload'))}document.getElementById('auto').classList.toggle('active',selected==='auto');document.getElementById('destination').textContent=active?.destination||'Hela linjen · välj en buss';vehicleCard(active);const followBtn=document.getElementById('follow');followBtn.style.display=active?'':'none';followBtn.textContent=followBus?'Följ buss: på':'Följ buss: av';const progress=active?liveStopLists(active):{next:[],passed:[]};const next=progress.next,passed=progress.passed;document.getElementById('stops').classList.toggle('hasStops',Boolean(active&&(next.length||passed.length)));document.getElementById('stops').innerHTML=active&&(next.length||passed.length)?[...passed.map(s=>({s,cls:'passed'})),...next.map((s,i)=>({s,cls:i===0?'next':''}))].map(({s,cls},i)=>`<div class="stop ${cls}"><span class="dot"></span><span class="stopName">${escapeHTML(s.name)}${cls==='next'?'<div class="when">Nästa hållplats</div>':''}</span><span class="time">${forecastHTML(s)}${cls==='next'?`<div class="when">${escapeHTML(etaText(s.scheduled))}</div>`:''}</span></div>`).join(''):'<div class="stop"><span class="stopName">Inga aktuella hållplatsuppgifter</span></div>';
 // Jump to the next stop only on trip changes; don't steal the user's scroll on every refresh.
 const timelineKey=active?String(active.id)+'|'+String(active.tripId||''):'';
 if(timelineKey && lastTimelineTrip!==timelineKey){
@@ -168,24 +147,22 @@ if(timelineKey && lastTimelineTrip!==timelineKey){
  const nextRow=document.querySelector('#stops .stop.next');
  if(nextRow){const list=document.getElementById('stops');list.scrollTop=Math.max(0,nextRow.offsetTop-list.offsetTop-60)}
 }
-stopLayer.clearLayers();if(trailLine){map.removeLayer(trailLine);trailLine=null}if(remainingLine){map.removeLayer(remainingLine);remainingLine=null}if(!active)document.getElementById('telemetry').classList.remove('visible');if(active){
- // Always show the route for the active bus, including the automatic selection.
- // Dashed fallback = stop-to-stop approximation, solid = actual GTFS road shape.
- const {traveled,remaining,approx}=splitRoute(active);
- const routeStyle=approx?{dashArray:'7 10',opacity:.88}:{opacity:.92};
- if(remaining.length>1)remainingLine=L.polyline(remaining,{color:'#9ba5aa',weight:6,lineCap:'round',lineJoin:'round',...routeStyle}).addTo(map);
- if(traveled.length>1)trailLine=L.polyline(traveled,{color:'#138fdf',weight:7,lineCap:'round',lineJoin:'round',...routeStyle}).addTo(map);
+stopLayer.clearLayers();terminalGhosts.clearLayers();if(trailLine){map.removeLayer(trailLine);trailLine=null}if(remainingLine){map.removeLayer(remainingLine);remainingLine=null}if(!active){document.getElementById('telemetry').classList.remove('visible');document.getElementById('displayFooter').textContent='Välj ett fordon för att se hela resan och körd sträcka';}if(active){
+ // Route only on genuine GTFS geometry. Both segments are continuous solid lines.
+ const {traveled,remaining}=splitRoute(active);
+ if(remaining.length>1)remainingLine=L.polyline(remaining,{color:'#9ba5aa',weight:5,opacity:.82,lineCap:'round',lineJoin:'round'}).addTo(map);
+ if(traveled.length>1)trailLine=L.polyline(traveled,{color:'#208ed8',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(map);
  const stops=[...passed,...next].filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lon));stops.forEach((s,i)=>{const cls=i<passed.length?'passed':i===passed.length?'next':'';const marker=L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html:`<div class="stopPin ${cls}"></div>`,iconSize:[16,16],iconAnchor:[8,8]}),interactive:true}).addTo(stopLayer);marker.bindPopup(`<strong>${escapeHTML(s.name)}</strong><br>Tidtabell: ${escapeHTML(timeHHMM(s.scheduled))}`)});const telemetry=document.getElementById('telemetry');telemetry.classList.toggle('visible',selected!=='auto');
  const kph=selected!=='auto'?gpsHistory.get(active.id)?.speed:null;
  document.getElementById('speed').textContent=kph===null||kph===undefined?'–':String(Math.round(kph));
  document.getElementById('speedDetail').textContent=kph===null||kph===undefined?'Väntar på två GPS-positioner':'GPS-beräknat medelvärde · uppskattat';
  document.getElementById('gaugeArc').setAttribute('stroke-dasharray',`${Math.round(151*Math.max(0,Math.min(1,(kph||0)/100)))} 151`);
- document.getElementById('displayFooter').textContent=`Tidtabell · GPS ${active.timestamp?new Date(active.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'okänd'} · ${selected!=='auto' ? 'Planerad rutt till GPS-position' : 'Automatiskt vald buss · rutt visas'}`;}}
+ document.getElementById('displayFooter').textContent=`Tidtabell · GPS ${active.timestamp?new Date(active.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'okänd'} · ${selected!=='auto' ? 'Planerad rutt till GPS-position' : 'Hela linjen'}`;}}
 async function update(){if(loading)return;loading=true;try{const r=await fetch('/api/vehicles',{cache:'no-store'});if(!r.ok)throw Error('Server HTTP '+r.status);const d=await r.json();if(!Array.isArray(d.buses))throw Error(d.error||'Ungültige Daten');if(d.loading && !d.buses.length){
  status.innerHTML='<b>Startar live-data …</b><div>Servern läser in tidtabellen i bakgrunden. Du kan lämna sidan och komma tillbaka.</div>'+(d.error?'<div>'+escapeHTML(d.error)+'</div>':'');
  return;
 }
 if(d.stale && d.buses.length){status.textContent='Visar senast kända positioner · uppdaterar …'}
 buses=d.buses;for(const b of buses)speedFor(b);const fresh=buses.filter(b=>b.timestamp&&Date.now()-Date.parse(b.timestamp)<120000).length;const when=d.updated?new Date(d.updated).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'–';status.innerHTML=`<b>${buses.length} fordon på linje 801</b><div>${fresh} med GPS från senaste 2 minuterna · Hämtad ${escapeHTML(when)} (Sverige)</div>${!buses.length?'<div>Ingen aktiv tur · Ingen buss hittades i UL:s realtidsflöde.</div>':''}`;redraw()}catch(e){status.innerHTML=`<b>Realtidsanslutningen bröts</b><div>${escapeHTML(e.message)}</div><div>Senaste positioner visas men kan vara inaktuella.</div>`}finally{loading=false}}
-function scheduleRefresh(){clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!document.hidden)update()},Number(frequency.value))}frequency.onchange=()=>{scheduleRefresh();update()};document.getElementById('auto').onclick=()=>{selected='auto';redraw()};document.getElementById('reload').onclick=update;document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});function clock(){document.getElementById('clock').textContent=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())+' · Sverige'}clock();setInterval(clock,1000);scheduleRefresh();update();
+function scheduleRefresh(){clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!document.hidden)update()},Number(frequency.value))}frequency.onchange=()=>{scheduleRefresh();update()};document.getElementById('auto').onclick=wholeLine;document.getElementById('follow').onclick=()=>{followBus=!followBus;redraw()};document.getElementById('reload').onclick=update;document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});function clock(){document.getElementById('clock').textContent=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())+' · Sverige'}clock();setInterval(clock,1000);scheduleRefresh();update();
 </script></body></html>
