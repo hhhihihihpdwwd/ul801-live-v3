@@ -186,15 +186,16 @@ function wholeLine(){
 }
 function chooseBus(id){selected=id;followBus=false;const bus=buses.find(b=>b.id===id);if(bus){map.flyTo((motion.has(id)?[motion.get(id).lat,motion.get(id).lon]:[bus.lat,bus.lon]),Math.max(map.getZoom(),11),{animate:true,duration:0.75});}redraw();}
 function vehicleCard(bus){const card=document.getElementById('vehicleCard');card.hidden=!bus;if(!bus)return;
+ // Only photographic references where line number 801 is visible; these are examples, not the tracked vehicle.
  const photos=[
-  'https://www.ul.se/globalassets/bilder-klara/kampanjer/testresenar/testresenar_puff_2026.jpg',
-  'https://regionuppsala.se/contentassets/d188363c5a804eada85b19dc448a0d27/buss_ul.jpg?heightratio=.5625&mode=crop&width=860',
-  'https://www.ul.se/globalassets/bilder-klara/kampanjer/testresenar/testresenar_puff_2026.jpg'
+  'https://www.bussmagasinet.se/wp-content/uploads/2023/09/UIppland-personal.jpg',
+  'https://www.bussmagasinet.se/wp-content/uploads/2018/06/UL801.jpg',
+  'https://acsis.weebly.com/uploads/2/9/6/9/2969300/839702_orig.jpg'
  ];
  const hash=String(bus.id).split('').reduce((a,c)=>((a*31+c.charCodeAt(0))>>>0),0);
  const photo=`<img loading="lazy" src="${photos[hash%photos.length]}" alt="UL-buss, exempelbild" onerror="this.style.display='none';this.parentElement.textContent='UL 801'">`;
 
- card.innerHTML=`<div class="vehiclePhoto">${photo}</div><div class="vehicleInfo"><strong>Fordon ${escapeHTML(String(bus.id).slice(-6))}</strong><div>801 → ${escapeHTML(bus.destination)}</div><div>GPS ${escapeHTML(bus.timestamp?new Date(bus.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'–')}</div><span class="vehicleTag">UL-buss · exempelbild (inte verifierat fordon)</span></div>`;
+ card.innerHTML=`<div class="vehiclePhoto">${photo}</div><div class="vehicleInfo"><strong>Fordon ${escapeHTML(String(bus.id).slice(-6))}</strong><div>801 → ${escapeHTML(bus.destination)}</div><div>GPS ${escapeHTML(bus.timestamp?new Date(bus.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'–')}</div><span class="vehicleTag">Linje 801 · arkiv-/exempelbild (inte detta fordon)</span></div>`;
 }
 
 function waitingBusIcon(){return L.divIcon({className:'',html:'<div style="width:31px;height:31px;display:grid;place-items:center;border-radius:8px;border:2px solid #607780;background:#9ba8aa;color:#152a32;opacity:.75;font-size:20px;box-shadow:0 2px 7px #0005">🚌</div>',iconSize:[31,31],iconAnchor:[15,15]})}
@@ -202,13 +203,13 @@ function drawWaitingBuses(){
  terminalGhosts.clearLayers();
  // Candidate waiting bays: offset only a few meters from the true terminal stops.
  // Positions and vehicles are illustrative, NOT vehicle-tracking or verified bus bays.
- const groups=[{name:'Uppsala Centralstation',re:/uppsala central/i},{name:'Arlanda Halmsjön',re:/halmsj[oö]n/i}];
- const allStops=buses.flatMap(b=>[...(b.passedStops||[]),...(b.nextStops||[])]);
- for(const g of groups){const stop=allStops.find(s=>g.re.test(s.name||'')&&Number.isFinite(s.lat)&&Number.isFinite(s.lon));if(!stop)continue;
-  if(buses.some(b=>L.latLng([b.lat,b.lon]).distanceTo([stop.lat,stop.lon])<110))continue;
+ const groups=[{name:'Uppsala Centralstation',re:/uppsala central/i,fallback:[59.8585,17.6465]},{name:'Arlanda Halmsjön',re:/halmsj[oö]n/i,fallback:[59.648,17.934]}];
+ const allStops=buses.flatMap(b=>[...(b.allStops||[]),...(b.passedStops||[]),...(b.nextStops||[])]);
+ for(const g of groups){const stop=allStops.find(s=>g.re.test(s.name||'')&&Number.isFinite(s.lat)&&Number.isFinite(s.lon))||{lat:g.fallback[0],lon:g.fallback[1]};
+  // Illustrative vehicle is ALWAYS marked as simulated; it does not represent a real fleet vehicle.
   // ~18m east of platform, a visual placeholder near the terminal, not a claim of a real bay.
   const point=[stop.lat,stop.lon+0.00032];
-  L.marker(point,{icon:waitingBusIcon(),interactive:true,zIndexOffset:-1000}).addTo(terminalGhosts).bindTooltip('Simulerad väntande buss · '+escapeHTML(g.name)+' · ingen live-GPS',{direction:'top'});
+  L.marker(point,{icon:waitingBusIcon(),interactive:true,zIndexOffset:-1000}).addTo(terminalGhosts).bindTooltip('Simulerad väntande buss · '+escapeHTML(g.name)+' · position ungefärlig, ingen live-GPS',{direction:'top'});
  }
 }
 function redraw(){const found=new Set(buses.map(b=>b.id));for(const [id,p] of pins)if(!found.has(id)){map.removeLayer(p);pins.delete(id);const job=animationJobs.get(id);if(job)cancelAnimationFrame(job.raf);animationJobs.delete(id);motion.delete(id);gpsHistory.delete(id);lastGps.delete(id)}const active=selected==='auto'?null:buses.find(x=>x.id===selected)||null;for(const bus of buses){let p=pins.get(bus.id);if(!p){p=L.marker([bus.lat,bus.lon],{icon:icon(bus.id===active?.id,bus.bearing)}).addTo(map).on('click',()=>chooseBus(bus.id));pins.set(bus.id,p)}animateMarker(p,[bus.lat,bus.lon],bus.id,bus.timestamp||String(bus.lat)+String(bus.lon),routeFor(bus),bus);p.setIcon(icon(bus.id===active?.id,bus.bearing))}if(!fitDone&&buses.length){wholeLineBounds();fitDone=true}
@@ -216,6 +217,7 @@ controls.querySelectorAll('.busChoice').forEach(x=>x.remove());for(const b of bu
 // Center the next stop on selection and whenever the actual next stop changes.
 // Manual scrolling stays available: don't re-center on every five-second refresh.
 const currentNext=next[0];
+const timelineKey=active?(String(active.id)+'|'+String(active.tripId||'')):'';
 const nextStopKey=timelineKey+'|'+(currentNext?String(currentNext.stopId||currentNext.id||currentNext.name||'')+'|'+String(currentNext.stopSequence??''):'none');
 if(timelineKey && nextStopKey!==lastCenteredStopKey){
  lastCenteredStopKey=nextStopKey;
@@ -231,12 +233,13 @@ if(!timelineKey)lastCenteredStopKey='';
 stopLayer.clearLayers();drawWaitingBuses();if(trailLine){map.removeLayer(trailLine);trailLine=null}if(remainingLine){map.removeLayer(remainingLine);remainingLine=null}if(!active){document.getElementById('telemetry').classList.remove('visible');document.getElementById('displayFooter').textContent='Välj ett fordon för att se hela resan och körd sträcka';}if(active){
  // Route only on genuine GTFS geometry. Both segments are continuous solid lines.
  const {traveled,remaining}=splitRoute(active);
+ if(traveled.length<2&&remaining.length<2){document.getElementById('displayFooter').textContent='GTFS-rutt saknas ännu för denna tur · väntar på väggeometri';}
  if(remaining.length>1)remainingLine=L.polyline(remaining,{color:'#9ba5aa',weight:5,opacity:.82,lineCap:'round',lineJoin:'round'}).addTo(map);
  if(traveled.length>1)trailLine=L.polyline(traveled,{color:'#208ed8',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(map);
  const stops=[...passed,...next].filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lon));stops.forEach((s,i)=>{const cls=i<passed.length?'passed':i===passed.length?'next':'';const marker=L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html:`<div class="stopPin ${cls}"></div>`,iconSize:[16,16],iconAnchor:[8,8]}),interactive:true}).addTo(stopLayer);marker.bindPopup(`<strong>${escapeHTML(s.name)}</strong><br>Tidtabell: ${escapeHTML(timeHHMM(s.scheduled))}`)});const telemetry=document.getElementById('telemetry');telemetry.classList.toggle('visible',selected!=='auto');
- const kph=selected!=='auto'?gpsHistory.get(active.id)?.speed:null;
+ const kph=motion.get(active.id)?.v!=null ? motion.get(active.id).v*3.6 : gpsHistory.get(active.id)?.speed;
  document.getElementById('speed').textContent=kph===null||kph===undefined?'–':String(Math.round(kph));
- document.getElementById('speedDetail').textContent=kph===null||kph===undefined?'Väntar på två GPS-positioner':'GPS-beräknat medelvärde · uppskattat';
+ document.getElementById('speedDetail').textContent=kph===null||kph===undefined?'Väntar på GPS':'Simulerad kartfart, anpassad efter GPS';
  document.getElementById('gaugeArc').setAttribute('stroke-dasharray',`${Math.round(151*Math.max(0,Math.min(1,(kph||0)/100)))} 151`);
  document.getElementById('displayFooter').textContent=`Tidtabell · GPS ${active.timestamp?new Date(active.timestamp).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm'}):'okänd'} · ${selected!=='auto' ? 'Planerad rutt till GPS-position' : 'Hela linjen'}`;}}
 async function update(){if(loading)return;loading=true;try{const r=await fetch('/api/vehicles',{cache:'no-store'});if(!r.ok)throw Error('Server HTTP '+r.status);const d=await r.json();if(!Array.isArray(d.buses))throw Error(d.error||'Ungültige Daten');if(d.loading && !d.buses.length){
